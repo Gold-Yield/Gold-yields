@@ -27,6 +27,7 @@ export default function App() {
   const [userPhone, setUserPhone] = useState<string>('');
   const [balance, setBalance] = useState<number>(0);
   const [inviteCode, setInviteCode] = useState<string>('GOLDYIELD');
+  const [schemaCacheStale, setSchemaCacheStale] = useState<boolean>(false);
   
   // Lists
   const [activeInvestments, setActiveInvestments] = useState<ActiveInvestment[]>([]);
@@ -101,6 +102,7 @@ export default function App() {
               setUserName(data.user.name);
               setBalance(data.user.balance);
               setInviteCode(data.user.inviteCode);
+              setSchemaCacheStale(data.schemaCacheStale || false);
               
               // Prevent counter reset on reload: merge DB values with the most up-to-date localStorage values
               const localClaimableStr = localStorage.getItem(`gy_${data.user.phone}_claimable`);
@@ -242,11 +244,12 @@ export default function App() {
   }, [isLoggedIn]);
 
   // Auth Success action handler (from database)
-  const handleLoginSuccess = (user: any, investmentsList: any[], transactionsList: any[]) => {
+  const handleLoginSuccess = (user: any, investmentsList: any[], transactionsList: any[], isStale?: boolean) => {
     setUserName(user.name);
     setUserPhone(user.phone);
     setInviteCode(user.inviteCode);
     setBalance(user.balance);
+    setSchemaCacheStale(isStale || false);
 
     // Merge with local storage values to prevent counter reset on reload
     const localClaimableStr = localStorage.getItem(`gy_${user.phone}_claimable`);
@@ -512,6 +515,7 @@ export default function App() {
             onOpenWithdraw={() => setScreen('withdraw')}
             onCollectGains={handleCollectGains}
             claimableSum={claimableSum}
+            schemaCacheStale={schemaCacheStale}
           />
         )}
 

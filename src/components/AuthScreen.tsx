@@ -26,7 +26,7 @@ const COUNTRIES = [
 ];
 
 interface AuthScreenProps {
-  onLoginSuccess: (user: any, activeInvestments: any[], transactions: any[]) => void;
+  onLoginSuccess: (user: any, activeInvestments: any[], transactions: any[], isStale?: boolean) => void;
 }
 
 export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
@@ -87,7 +87,7 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
         }
 
         // Proceed with login success
-        onLoginSuccess(data.user, [], []);
+        onLoginSuccess(data.user, [], [], data.schemaCacheStale);
       } else {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -100,7 +100,7 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           throw new Error(data.error || 'Erreur de connexion.');
         }
 
-        onLoginSuccess(data.user, data.activeInvestments || [], data.transactions || []);
+        onLoginSuccess(data.user, data.activeInvestments || [], data.transactions || [], data.schemaCacheStale);
       }
     } catch (err: any) {
       setError(err.message || 'Une erreur de connexion au serveur s\'est produite.');

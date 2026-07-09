@@ -565,15 +565,10 @@ app.post('/api/user/withdraw', async (req, res) => {
       return res.status(400).json({ error: 'Solde insuffisant pour ce retrait.' });
     }
 
-    const newBalance = Number(user.balance) - amount;
+    const currentBalanceVal = Number(user.balance);
 
-    // 2. Update balance
-    const { error: userUpdateErr } = await supabase
-      .from('users')
-      .update({ balance: newBalance })
-      .eq('phone', phone);
-
-    if (userUpdateErr) throw userUpdateErr;
+    // 2. We DO NOT automatically subtract the balance anymore upon request.
+    // The balance remains unchanged until manually validated/processed by the administrator.
 
     // 3. Log pending withdrawal transaction (omitting 'date' column as it doesn't exist on user's Supabase)
     const txId = `tx_${Date.now()}_withdrawal`;
@@ -592,7 +587,7 @@ app.post('/api/user/withdraw', async (req, res) => {
 
     res.json({
       success: true,
-      balance: newBalance,
+      balance: currentBalanceVal,
       transaction: {
         id: txId,
         type: 'withdrawal',

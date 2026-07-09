@@ -13,6 +13,7 @@ import {
   Sparkles,
   ChevronRight,
   Plus,
+  AlertCircle,
   MessageSquare,
   Clock,
   HelpCircle,
@@ -35,6 +36,7 @@ interface DashboardScreenProps {
   onOpenWithdraw: () => void;
   onCollectGains: () => void;
   claimableSum: number;
+  schemaCacheStale?: boolean;
 }
 
 export function DashboardScreen({
@@ -45,10 +47,18 @@ export function DashboardScreen({
   onOpenRecharge,
   onOpenWithdraw,
   onCollectGains,
-  claimableSum
+  claimableSum,
+  schemaCacheStale
 }: DashboardScreenProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedCmd, setCopiedCmd] = useState(false);
   const inviteLink = "https://goldyields.org/join?ref=GOLDYIELD";
+
+  const handleCopyCmd = () => {
+    navigator.clipboard.writeText("ALTER TABLE users ADD COLUMN IF NOT EXISTS claimable_sum NUMERIC DEFAULT 0;\nALTER TABLE users ADD COLUMN IF NOT EXISTS last_tick_time BIGINT DEFAULT 0;\nNOTIFY pgrst, 'reload schema';");
+    setCopiedCmd(true);
+    setTimeout(() => setCopiedCmd(false), 3000);
+  };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(inviteLink);
@@ -63,6 +73,48 @@ export function DashboardScreen({
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 md:px-8 space-y-8 pb-20 font-sans">
       
+      {/* DB Schema Cache Alert / Action notice */}
+      {schemaCacheStale && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-3xl p-6 space-y-4"
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-amber-500/20 rounded-xl text-amber-400">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-amber-400">
+                Action Recommandée : Cache de schéma Supabase obsolète détecté !
+              </h4>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Votre base de données Supabase ne reconnaît pas encore les colonnes de mining (<code className="text-amber-300 font-mono">claimable_sum</code>, <code className="text-amber-300 font-mono">last_tick_time</code>). 
+                L'application utilise un système de secours local sécurisé, mais pour activer la sauvegarde de votre progression dans le cloud, veuillez exécuter ces commandes de mise à jour.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80">
+            <div className="flex-1 font-mono text-[11px] text-slate-400 select-all overflow-x-auto whitespace-pre leading-normal w-full max-w-full">
+              {`ALTER TABLE users ADD COLUMN IF NOT EXISTS claimable_sum NUMERIC DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_tick_time BIGINT DEFAULT 0;
+NOTIFY pgrst, 'reload schema';`}
+            </div>
+            <button
+              onClick={handleCopyCmd}
+              className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md shadow-amber-500/10 shrink-0 cursor-pointer"
+            >
+              {copiedCmd ? 'Copié !' : 'Copier le script SQL'}
+            </button>
+          </div>
+
+          <p className="text-[10px] text-slate-500 italic">
+            💡 Astuce : Allez dans votre console Supabase, puis dans l'éditeur SQL, collez le script ci-dessus et cliquez sur "Run". Vos données de gains seront instantanément synchronisées de manière sécurisée !
+          </p>
+        </motion.div>
+      )}
+
       {/* 1. HERO BLOCK & CORE METRICS CARD */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
