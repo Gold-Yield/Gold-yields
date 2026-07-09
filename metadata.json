@@ -1,0 +1,6 @@
+{
+  "name": "Gold Yield",
+  "description": "Plateforme d'investissement premium dans l'or pour fructifier vos capitaux avec des rendements journaliers stables et collectables en temps réel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
