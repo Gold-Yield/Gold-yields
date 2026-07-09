@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Setup Supabase credentials (resilient fallback to values provided by the user)
 const rawUrl = process.env.SUPABASE_URL || 'https://ifreybansmlibegsfhkj.supabase.co/rest/v1/';
