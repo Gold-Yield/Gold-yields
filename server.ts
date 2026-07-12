@@ -326,6 +326,20 @@ app.post('/api/user/purchase', async (req, res) => {
   if (!phone || !planId) return res.status(400).json({ error: 'Phone et planId requis.' });
 
   try {
+    // Check if trying to invest in 'plan_poussiere' and already has it
+    if (planId === 'plan_poussiere') {
+      const { data: existing, error: existErr } = await supabase
+        .from('active_investments')
+        .select('id')
+        .eq('user_phone', phone)
+        .eq('plan_id', 'plan_poussiere')
+        .limit(1);
+
+      if (!existErr && existing && existing.length > 0) {
+        return res.status(400).json({ error: "L'investissement dans le Plan Poussière d'Or est limité à une seule fois." });
+      }
+    }
+
     // 1. Check current balance
     const { data: user, error: userErr } = await supabase
       .from('users')

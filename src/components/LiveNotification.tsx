@@ -37,6 +37,9 @@ function generateRandomNotification(): NotificationItem {
 
   if (typeRand < 0.4) {
     type = 'deposit';
+    // Ensure deposit amounts start from 3000 FCFA
+    const depositAmounts = AMOUNTS.filter(a => a >= 3000);
+    amount = depositAmounts[Math.floor(Math.random() * depositAmounts.length)];
   } else if (typeRand < 0.8) {
     type = 'investment';
     planName = PLANS[Math.floor(Math.random() * PLANS.length)];

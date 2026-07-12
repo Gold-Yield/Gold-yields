@@ -508,6 +508,10 @@ export default function App() {
             activeInvestments={activeInvestments}
             transactions={transactions}
             onSelectPlan={(plan) => {
+              if (plan.id === 'plan_poussiere' && activeInvestments.some((inv) => inv.planId === 'plan_poussiere')) {
+                showToast("L'investissement dans le Plan Poussière d'Or est limité à une seule fois.", "error");
+                return;
+              }
               setSelectedPlan(plan);
               setScreen('order');
             }}

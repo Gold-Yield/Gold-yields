@@ -27,6 +27,10 @@ import { InvestmentPlan, ActiveInvestment, Transaction } from '../types';
 import { DEFAULT_PLANS } from '../data';
 import { PlanIcon } from './PlanIcon';
 
+import imgRefinery from '../assets/images/gold_refinery_1783873491748.jpg';
+import imgMinePit from '../assets/images/gold_mine_pit_1783873507482.jpg';
+import imgEngineers from '../assets/images/mining_engineers_1783873521791.jpg';
+
 interface DashboardScreenProps {
   balance: number;
   activeInvestments: ActiveInvestment[];
@@ -280,55 +284,152 @@ NOTIFY pgrst, 'reload schema';`}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {DEFAULT_PLANS.map((plan) => (
-            <motion.div
-              key={plan.id}
-              whileHover={{ y: -4, borderColor: 'rgba(212, 175, 55, 0.35)' }}
-              className="bg-slate-900/80 border border-slate-850 rounded-3xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between group"
-            >
-              {/* Card Header design */}
-              <div className="space-y-3 relative z-10">
-                <div className="flex justify-between items-center">
-                  <div className={`p-3 bg-gradient-to-br ${plan.colorScheme.from} ${plan.colorScheme.to} rounded-2xl border border-white/5`}>
-                    <PlanIcon name={plan.iconName} className={`w-5 h-5 ${plan.colorScheme.text}`} />
-                  </div>
-                  <span className="text-[10px] bg-slate-950/80 border border-slate-800 text-slate-400 py-1 px-2.5 rounded-lg font-mono">
-                    Rendement 30j
-                  </span>
-                </div>
+          {DEFAULT_PLANS.map((plan) => {
+            const isPlanPoussiereAlreadyPurchased = plan.id === 'plan_poussiere' && activeInvestments.some((inv) => inv.planId === 'plan_poussiere');
 
-                <div>
-                  <h4 className="text-lg font-bold font-display text-white leading-tight">
-                    {plan.name}
-                  </h4>
-                  <span className="text-2xl font-black font-mono text-gold-400 block mt-1">
-                    {plan.price.toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-
-                {/* Return Details breakdown */}
-                <div className="bg-slate-950/50 rounded-xl p-3 border border-slate-900 grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span className="text-slate-500 block text-[9px] uppercase">Gains/Jour</span>
-                    <span className="font-bold font-mono text-green-400">+{plan.dailyProfit.toLocaleString('fr-FR')} FCFA</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[9px] uppercase">Retour Total</span>
-                    <span className="font-bold font-mono text-white">{plan.totalProfit.toLocaleString('fr-FR')} FCFA</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action purchase button */}
-              <button
-                onClick={() => onSelectPlan(plan)}
-                className="w-full mt-4 py-2.5 px-4 bg-slate-950 hover:bg-gradient-to-r hover:from-gold-500 hover:to-amber-600 hover:text-slate-950 text-gold-400 font-bold text-xs rounded-xl border border-gold-500/20 hover:border-transparent transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            return (
+              <motion.div
+                key={plan.id}
+                whileHover={isPlanPoussiereAlreadyPurchased ? {} : { y: -4, borderColor: 'rgba(212, 175, 55, 0.35)' }}
+                className={`bg-slate-900/80 border rounded-3xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between group ${
+                  isPlanPoussiereAlreadyPurchased ? 'border-red-500/20 opacity-80' : 'border-slate-850'
+                }`}
               >
-                <span>Investir maintenant</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </motion.div>
-          ))}
+                {/* Card Header design */}
+                <div className="space-y-3 relative z-10">
+                  <div className="flex justify-between items-center">
+                    <div className={`p-3 bg-gradient-to-br ${plan.colorScheme.from} ${plan.colorScheme.to} rounded-2xl border border-white/5`}>
+                      <PlanIcon name={plan.iconName} className={`w-5 h-5 ${plan.colorScheme.text}`} />
+                    </div>
+                    <span className="text-[10px] bg-slate-950/80 border border-slate-800 text-slate-400 py-1 px-2.5 rounded-lg font-mono">
+                      Rendement 30j
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-bold font-display text-white leading-tight">
+                      {plan.name}
+                    </h4>
+                    <span className="text-2xl font-black font-mono text-gold-400 block mt-1">
+                      {plan.price.toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </div>
+
+                  {/* Return Details breakdown */}
+                  <div className="bg-slate-950/50 rounded-xl p-3 border border-slate-900 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500 block text-[9px] uppercase">Gains/Jour</span>
+                      <span className="font-bold font-mono text-green-400">+{plan.dailyProfit.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[9px] uppercase">Retour Total</span>
+                      <span className="font-bold font-mono text-white">{plan.totalProfit.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action purchase button */}
+                {isPlanPoussiereAlreadyPurchased ? (
+                  <button
+                    disabled
+                    className="w-full mt-4 py-2.5 px-4 bg-slate-950/40 text-red-400/90 font-bold text-xs rounded-xl border border-red-500/20 cursor-not-allowed flex items-center justify-center gap-1.5"
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                    <span>Achat unique (Déjà investi)</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onSelectPlan(plan)}
+                    className="w-full mt-4 py-2.5 px-4 bg-slate-950 hover:bg-gradient-to-r hover:from-gold-500 hover:to-amber-600 hover:text-slate-950 text-gold-400 font-bold text-xs rounded-xl border border-gold-500/20 hover:border-transparent transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>Investir maintenant</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* SECTION FIABILITÉ & INFRASTRUCTURES RÉELLES */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-gold-400" />
+            <span>Nos Infrastructures Réelles & Chantiers Partenaires</span>
+          </h3>
+          <p className="text-xs text-slate-400">
+            Gold Yield collabore activement avec des concessions minières de classe mondiale et des raffineries certifiées pour adosser chaque investissement numérique à de l'or physique réel.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Site 1 */}
+          <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl overflow-hidden group hover:border-gold-500/30 transition-all duration-300">
+            <div className="h-48 overflow-hidden relative">
+              <img
+                src={imgMinePit}
+                alt="Chantier d'extraction aurifère"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+              <span className="absolute bottom-3 left-3 text-[10px] bg-gold-500 text-slate-950 font-extrabold px-2.5 py-1 rounded-lg font-mono">
+                CONCESSION ACTIVE
+              </span>
+            </div>
+            <div className="p-4 space-y-1.5">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider text-gold-400">Mine de Kibali & Gisement du Sahel</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Extraction industrielle moderne à ciel ouvert et traitement haute technologie garantissant un approvisionnement continu de minerai d'or à haut rendement quotidien.
+              </p>
+            </div>
+          </div>
+
+          {/* Site 2 */}
+          <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl overflow-hidden group hover:border-gold-500/30 transition-all duration-300">
+            <div className="h-48 overflow-hidden relative">
+              <img
+                src={imgRefinery}
+                alt="Unité de raffinage de l'or"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+              <span className="absolute bottom-3 left-3 text-[10px] bg-gold-500 text-slate-950 font-extrabold px-2.5 py-1 rounded-lg font-mono">
+                RAFFINAGE CERTIFIÉ 99.9%
+              </span>
+            </div>
+            <div className="p-4 space-y-1.5">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider text-gold-400">Unités de Purification & Lingotage</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Transformation sécurisée de l'or brut en lingots certifiés d'une pureté de 99.9% assurant la solidité, la liquidité et la couverture financière complète de notre fonds.
+              </p>
+            </div>
+          </div>
+
+          {/* Site 3 */}
+          <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl overflow-hidden group hover:border-gold-500/30 transition-all duration-300">
+            <div className="h-48 overflow-hidden relative">
+              <img
+                src={imgEngineers}
+                alt="Ingénieurs miniers et géologues"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+              <span className="absolute bottom-3 left-3 text-[10px] bg-gold-500 text-slate-950 font-extrabold px-2.5 py-1 rounded-lg font-mono">
+                CONTRÔLE QUALITÉ & AUDIT
+              </span>
+            </div>
+            <div className="p-4 space-y-1.5">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider text-gold-400">Géologues & Experts de Terrain</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Une équipe pluridisciplinaire d'ingénieurs et de techniciens qualifiés gérant la prospection, l'évaluation et l'audit continu pour minimiser les risques.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -352,11 +453,12 @@ NOTIFY pgrst, 'reload schema';`}
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeInvestments.map((act) => {
-              // Simulating progress
+              // Simulating progress based on actual elapsed time
               const activationDate = new Date(act.dateActivated);
               const totalDays = act.durationDays || 30;
-              // Just a simulated indicator of days passed (1 by default, up to totalDays)
-              const daysPassed = Math.min(1, totalDays);
+              const msPassed = Date.now() - activationDate.getTime();
+              const actualDaysPassed = Math.max(0, Math.floor(msPassed / (1000 * 60 * 60 * 24)));
+              const daysPassed = Math.min(actualDaysPassed + 1, totalDays);
               const progressPct = (daysPassed / totalDays) * 100;
 
               return (
