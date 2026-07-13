@@ -17,6 +17,28 @@ import { InvestmentPlan, ActiveInvestment, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckCircle, AlertCircle, Sparkles, X } from 'lucide-react';
 
+const calculateAccruedEarnings = (activePlans: any[], lastTime: number, now: number): number => {
+  if (!activePlans || activePlans.length === 0 || lastTime >= now) return 0;
+  
+  let totalAccrued = 0;
+  for (const item of activePlans) {
+    const t_start = new Date(item.dateActivated).getTime();
+    const durationDays = item.durationDays || 30;
+    const t_end = t_start + durationDays * 24 * 60 * 60 * 1000;
+    
+    // Intersection of [lastTime, now] and [t_start, t_end]
+    const overlap_start = Math.max(lastTime, t_start);
+    const overlap_end = Math.min(now, t_end);
+    
+    if (overlap_end > overlap_start) {
+      const elapsedSeconds = (overlap_end - overlap_start) / 1000;
+      const profitPerSec = (item.dailyProfit || 0) / 86400;
+      totalAccrued += elapsedSeconds * profitPerSec;
+    }
+  }
+  return totalAccrued;
+};
+
 export default function App() {
   // Screen routing states: 'auth' | 'dashboard' | 'order' | 'recharge' | 'withdraw'
   const [screen, setScreen] = useState<'auth' | 'dashboard' | 'order' | 'recharge' | 'withdraw'>('auth');
@@ -122,10 +144,7 @@ export default function App() {
               const now = Date.now();
               const elapsedMs = now - finalTick;
               if (elapsedMs > 2000 && activePlans.length > 0) {
-                const elapsedSeconds = elapsedMs / 1000;
-                const totalDailyRevenue = activePlans.reduce((sum: number, item: any) => sum + item.dailyProfit, 0);
-                const profitPerSec = totalDailyRevenue / 86400;
-                const accruedOffline = elapsedSeconds * profitPerSec;
+                const accruedOffline = calculateAccruedEarnings(activePlans, finalTick, now);
                 finalClaimable += accruedOffline;
                 finalTick = now;
               }
@@ -162,10 +181,7 @@ export default function App() {
             const now = Date.now();
             const elapsedMs = now - finalTick;
             if (elapsedMs > 2000 && activePlans.length > 0) {
-              const elapsedSeconds = elapsedMs / 1000;
-              const totalDailyRevenue = activePlans.reduce((sum: number, item: any) => sum + item.dailyProfit, 0);
-              const profitPerSec = totalDailyRevenue / 86400;
-              const accruedOffline = elapsedSeconds * profitPerSec;
+              const accruedOffline = calculateAccruedEarnings(activePlans, finalTick, now);
               finalClaimable += accruedOffline;
               finalTick = now;
             }
@@ -224,15 +240,9 @@ export default function App() {
       const now = Date.now();
       const lastTime = lastTickTimeRef.current;
       const elapsedMs = now - lastTime;
-      const elapsedSeconds = elapsedMs / 1000;
 
-      if (elapsedSeconds > 0) {
-        // Compute yield for all active plans
-        const totalDailyRevenue = activeList.reduce((sum, item) => sum + item.dailyProfit, 0);
-        // Profit per second is daily profit divided by 86400 seconds in a day
-        const profitPerSec = totalDailyRevenue / 86400;
-        const accrued = elapsedSeconds * profitPerSec;
-
+      if (elapsedMs > 0) {
+        const accrued = calculateAccruedEarnings(activeList, lastTime, now);
         setClaimableSum((prev) => prev + accrued);
       }
       
@@ -520,6 +530,7 @@ export default function App() {
             onCollectGains={handleCollectGains}
             claimableSum={claimableSum}
             schemaCacheStale={schemaCacheStale}
+            userPhone={userPhone}
           />
         )}
 

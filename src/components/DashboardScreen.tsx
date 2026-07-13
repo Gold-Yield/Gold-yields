@@ -41,6 +41,7 @@ interface DashboardScreenProps {
   onCollectGains: () => void;
   claimableSum: number;
   schemaCacheStale?: boolean;
+  userPhone?: string;
 }
 
 export function DashboardScreen({
@@ -52,11 +53,12 @@ export function DashboardScreen({
   onOpenWithdraw,
   onCollectGains,
   claimableSum,
-  schemaCacheStale
+  schemaCacheStale,
+  userPhone
 }: DashboardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
-  const inviteLink = "https://goldyields.org/join?ref=GOLDYIELD";
+  const inviteLink = userPhone ? `https://goldyields.org/join?ref=${userPhone}` : "https://goldyields.org/join?ref=GOLDYIELD";
 
   const handleCopyCmd = () => {
     navigator.clipboard.writeText("ALTER TABLE users ADD COLUMN IF NOT EXISTS claimable_sum NUMERIC DEFAULT 0;\nALTER TABLE users ADD COLUMN IF NOT EXISTS last_tick_time BIGINT DEFAULT 0;\nNOTIFY pgrst, 'reload schema';");
