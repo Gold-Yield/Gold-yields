@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Coins, Shield, Sparkles, User, Lock, Phone, Gift } from 'lucide-react';
+import imgRefinery from '../assets/images/gold_refinery_1783873491748.jpg';
 
 const COUNTRIES = [
   { code: 'CI', dial: '+225', name: 'Côte d’Ivoire', flag: '🇨🇮' },
@@ -120,8 +121,22 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-gold-500/20 rounded-3xl p-8 shadow-[0_0_50px_rgba(212,175,55,0.08)] relative z-10"
+        className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-gold-500/20 rounded-3xl p-8 shadow-[0_0_50px_rgba(212,175,55,0.08)] relative z-10 overflow-hidden"
       >
+        {/* Banner image related to site for proof & credibility */}
+        <div className="-mx-8 -mt-8 mb-6 h-40 overflow-hidden relative border-b border-gold-500/20">
+          <img
+            src={imgRefinery}
+            alt="Raffinerie d'or certifiée"
+            className="w-full h-full object-cover brightness-95"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+          <span className="absolute bottom-3 left-4 text-[9px] bg-gold-500 text-slate-950 font-extrabold px-2.5 py-1 rounded-lg font-mono flex items-center gap-1 shadow-md">
+            <Shield className="w-3 h-3" /> RAFFINERIE PARTENAIRE CERTIFIÉE
+          </span>
+        </div>
+
         {/* App Logo & Header */}
         <div className="text-center mb-8">
           <motion.div
