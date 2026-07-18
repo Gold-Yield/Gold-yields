@@ -247,7 +247,7 @@ NOTIFY pgrst, 'reload schema';`}
 
         {/* Telegram Official Support Channel */}
         <a
-          href="https://t.me/Goldyields"
+          href="https://t.me/goldyieldservice"
           target="_blank"
           rel="noreferrer"
           className="p-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-sky-500/30 rounded-2xl transition-all text-left flex flex-col gap-3 group cursor-pointer"
@@ -257,7 +257,7 @@ NOTIFY pgrst, 'reload schema';`}
           </div>
           <div>
             <span className="text-xs font-bold text-white block">Support t.me</span>
-            <span className="text-[9px] text-slate-400">Canal Goldyields officiel</span>
+            <span className="text-[9px] text-slate-400">Canal goldyieldservice officiel</span>
           </div>
         </a>
 

@@ -59,7 +59,7 @@ export function Footer() {
               Pour toute question relative à vos investissements ou transactions, notre support officiel est disponible en continu sur Telegram.
             </p>
             <a
-              href="https://t.me/Goldyields"
+              href="https://t.me/goldyieldservice"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-sky-500/30 text-xs font-semibold text-slate-300 hover:text-sky-400 rounded-xl transition-all"

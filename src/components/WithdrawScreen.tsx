@@ -66,7 +66,7 @@ export function WithdrawScreen({ currentBalance, onBack, onWithdrawSuccess, show
 
     const computedFee = Math.round(parsedAmount * 0.10);
     const computedNet = parsedAmount - computedFee;
-    const telegramUsername = 'Goldyields';
+    const telegramUsername = 'goldyieldservice';
 
     const message = `Bonjour Gold Yield ! 💸\n\n` +
                     `Je souhaite effectuer un retrait de mon compte.\n` +

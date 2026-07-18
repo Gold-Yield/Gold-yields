@@ -40,7 +40,7 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
     // Add a pending transaction or track locally
     onAddTransaction(parsedAmount);
 
-    const telegramUsername = 'Goldyields';
+    const telegramUsername = 'goldyieldservice';
     const message = `Bonjour Gold Yield ! 👋\n\n` +
                     `Je souhaite recharger mon compte.\n` +
                     `💰 *Montant du dépôt :* ${parsedAmount.toLocaleString('fr-FR')} FCFA\n\n` +
