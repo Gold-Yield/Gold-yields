@@ -13,6 +13,7 @@ import { BonusModal } from './components/BonusModal';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { LiveNotification } from './components/LiveNotification';
+import { AssistantBubble } from './components/AssistantBubble';
 import { InvestmentPlan, ActiveInvestment, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckCircle, AlertCircle, Sparkles, X } from 'lucide-react';
@@ -566,6 +567,9 @@ export default function App() {
 
       {/* Live active transaction alerts */}
       <LiveNotification />
+
+      {/* Floating Interactive Customer Support Assistant Bubble */}
+      <AssistantBubble />
 
       {/* Interactive Registration Welcome Bonus popup */}
       <BonusModal isOpen={isBonusOpen} onClose={() => setIsBonusOpen(false)} />
