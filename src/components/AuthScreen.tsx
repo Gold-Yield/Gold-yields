@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Coins, Shield, Sparkles, User, Lock, Phone, Gift } from 'lucide-react';
 import imgRefinery from '../assets/images/gold_refinery_1783873491748.jpg';
@@ -39,6 +39,17 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   const [inviteCode, setInviteCode] = useState('GOLDYIELD');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref') || params.get('invite') || params.get('code');
+      if (ref) {
+        setInviteCode(ref);
+        setIsSignUp(true);
+      }
+    }
+  }, []);
 
   const handleToggle = () => {
     setIsSignUp(!isSignUp);

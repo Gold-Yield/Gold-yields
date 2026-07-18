@@ -30,6 +30,7 @@ import { PlanIcon } from './PlanIcon';
 import imgRefinery from '../assets/images/gold_refinery_1783873491748.jpg';
 import imgMinePit from '../assets/images/gold_mine_pit_1783873507482.jpg';
 import imgEngineers from '../assets/images/mining_engineers_1783873521791.jpg';
+import imgPayments from '../assets/images/gold_yield_payments_banner_1784377000257.jpg';
 
 interface DashboardScreenProps {
   balance: number;
@@ -58,7 +59,18 @@ export function DashboardScreen({
 }: DashboardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
-  const inviteLink = userPhone ? `https://goldyields.org/join?ref=${userPhone}` : "https://goldyields.org/join?ref=GOLDYIELD";
+
+  // Dynamically obtain the actual current domain of the site so that sharing works perfectly
+  const getBaseUrl = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return "https://goldyields.org"; // fallback
+  };
+
+  const inviteLink = userPhone 
+    ? `${getBaseUrl()}/?ref=${userPhone}` 
+    : `${getBaseUrl()}/?ref=GOLDYIELD`;
 
   const handleCopyCmd = () => {
     navigator.clipboard.writeText("ALTER TABLE users ADD COLUMN IF NOT EXISTS claimable_sum NUMERIC DEFAULT 0;\nALTER TABLE users ADD COLUMN IF NOT EXISTS last_tick_time BIGINT DEFAULT 0;\nNOTIFY pgrst, 'reload schema';");
@@ -67,9 +79,15 @@ export function DashboardScreen({
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(inviteLink);
+    const textToCopy = `🌟 *Rejoignez Gold Yield et commencez à générer des revenus !* 🌟\n\n` +
+                       `Investissez dans le raffinage d'or certifié et gagnez des gains passifs quotidiens en toute sécurité ! 📈💰\n\n` +
+                       `🎁 *CADEAU DE BIENVENUE :* Recevez immédiatement un bonus de *1 000 FCFA* à l'inscription en passant par mon lien !\n\n` +
+                       `👉 Inscrivez-vous gratuitement dès maintenant : \n` +
+                       `${inviteLink}\n\n` +
+                       `🚀 Retraits rapides, rendements certifiés et support 24h/24. Rejoignez notre communauté d'investisseurs ! 👑`;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 3000);
   };
 
   // Calculate stats
@@ -517,7 +535,7 @@ NOTIFY pgrst, 'reload schema';`}
       </div>
 
       {/* 5. USER REFERRAL CARD */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl shadow-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1.5 text-center md:text-left">
           <span className="text-[10px] uppercase font-bold tracking-wider text-gold-400 flex items-center justify-center md:justify-start gap-1">
             <Sparkles className="w-3.5 h-3.5" /> Programme Parrainage Gold
@@ -526,19 +544,44 @@ NOTIFY pgrst, 'reload schema';`}
           <p className="text-xs text-slate-400 max-w-lg">
             Gagnez une commission instantanée de 10% sur chaque recharge effectuée par vos investisseurs parrainés. Vos amis reçoivent 1 000 FCFA à l'inscription.
           </p>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
+            <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/20 font-mono">
+              ✓ RETRAITS MTN / ORANGE / WAVE
+            </span>
+            <span className="text-[9px] bg-gold-500/10 text-gold-400 font-extrabold px-2.5 py-1 rounded-full border border-gold-500/20 font-mono">
+              ★ SUPPORT TECHNIQUE 24H/24
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl font-mono text-xs text-slate-300 select-all flex-1 md:flex-none text-center">
-            {inviteLink}
+        <div className="flex flex-col gap-2 w-full md:w-auto items-end shrink-0">
+          <div className="flex items-center gap-3 w-full">
+            <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl font-mono text-xs text-slate-300 select-all flex-1 md:flex-none text-center truncate max-w-[200px] md:max-w-xs">
+              {inviteLink}
+            </div>
+            <button
+              onClick={handleCopyLink}
+              className="px-4 py-2.5 bg-gold-500 hover:bg-gold-400 text-slate-950 rounded-xl font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-gold-500/10 hover:shadow-gold-500/20 active:scale-95 shrink-0"
+              title="Copier le message d'invitation"
+            >
+              {copied ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Copié !</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  <span>Partager</span>
+                </>
+              )}
+            </button>
           </div>
-          <button
-            onClick={handleCopyLink}
-            className="p-3 bg-gold-500 hover:bg-gold-400 text-slate-950 rounded-xl transition-colors cursor-pointer"
-            title="Copier le lien"
-          >
-            {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          </button>
+          {copied && (
+            <span className="text-[10px] text-emerald-400 font-medium animate-pulse">
+              ✓ Message marketing + lien d'invitation copiés !
+            </span>
+          )}
         </div>
       </div>
 
