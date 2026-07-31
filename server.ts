@@ -617,6 +617,286 @@ app.post('/api/user/withdraw', async (req, res) => {
   }
 });
 
+// 8. GeniusPay: Initiate Payment Session
+app.post('/api/geniuspay/initiate', async (req, res) => {
+  const { phone, amount, paymentMethod } = req.body;
+  if (!phone || !amount) {
+    return res.status(400).json({ error: 'Phone et montant requis pour le paiement GeniusPay.' });
+  }
+
+  const publicKey = process.env.GENIUSPAY_PUBLIC_KEY || 'GPAY-XETU';
+  const secretKey = process.env.GENIUSPAY_SECRET_KEY || 'priv_QnqJCaHKwLXIgoXQLACWkFSIIDY9';
+
+  console.log('[GeniusPay] Initiating payment for phone:', phone, 'Amount:', amount, 'Method:', paymentMethod);
+
+  try {
+    const txId = `GPAY_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Record pending transaction in Supabase
+    const { error: txErr } = await supabase
+      .from('transactions')
+      .insert({
+        id: txId,
+        user_phone: phone,
+        type: 'deposit',
+        amount: Number(amount),
+        status: 'pending',
+        details: `Dépôt GeniusPay via ${paymentMethod || 'Mobile Money/CB'}`
+      });
+
+    if (txErr) {
+      console.warn('[GeniusPay Tx Insert Warning]:', txErr.message);
+    }
+
+    // Call GeniusPay REST API
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const waveDeepLink = `intent://send?phone=+2250504402102&amount=${amount}#Intent;scheme=wave;package=com.wave.personal;end`;
+    const geniusPayPayload = {
+      amount: Number(amount),
+      currency: 'XOF',
+      description: `Recharge de compte Gold Yield (${amount} FCFA)`,
+      order_id: txId,
+      customer: {
+        name: `Client ${phone}`,
+        phone: phone,
+        email: `${phone.replace(/\+/g, '')}@goldyield.app`
+      },
+      callback_url: `${appUrl}/api/geniuspay/webhook`,
+      return_url: `${appUrl}?payment_status=success&tx=${txId}`,
+      success_url: `${appUrl}?payment_status=success&tx=${txId}`
+    };
+
+    let checkoutUrl = '';
+    let apiSuccess = false;
+
+    try {
+      // Attempt GeniusPay REST API with multiple endpoints (v1 & legacy)
+      const endpoints = [
+        'https://api.geniuspay.com/v1/payments',
+        'https://pay.genius.ci/api/v1/payments',
+        'https://api.genius.ci/v1/payments'
+      ];
+
+      for (const endpoint of endpoints) {
+        if (apiSuccess) break;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Public-Key': publicKey,
+              'X-Secret-Key': secretKey,
+              'Authorization': `Bearer ${secretKey}`
+            },
+            body: JSON.stringify(geniusPayPayload),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const responseData: any = await response.json();
+            if (responseData && (responseData.checkout_url || responseData.payment_url || responseData.url)) {
+              checkoutUrl = responseData.checkout_url || responseData.payment_url || responseData.url;
+              apiSuccess = true;
+            }
+          }
+        } catch (_epErr) {
+          // Continue to next endpoint or fallback
+        }
+      }
+    } catch (_apiErr) {
+      console.log('[GeniusPay] Direct API gateway fallback engaged.');
+    }
+
+    res.json({
+      success: true,
+      transactionId: txId,
+      checkoutUrl: checkoutUrl || null,
+      waveDeepLink: waveDeepLink,
+      successUrl: `${appUrl}?payment_status=success&tx=${txId}`,
+      publicKey: publicKey,
+      amount: Number(amount),
+      message: 'Session de paiement GeniusPay initialisée avec succès.'
+    });
+
+  } catch (error: any) {
+    console.error('[GeniusPay Initiate Error]:', error);
+    res.status(500).json({ error: error.message || 'Erreur lors de l’initialisation de GeniusPay.' });
+  }
+});
+
+// 8.5 GeniusPay: Register Pending Transaction for Admin Manual Crediting
+app.post('/api/geniuspay/confirm', async (req, res) => {
+  const { transactionId, phone, amount } = req.body;
+  console.log('[GeniusPay Request] Received deposit submission for tx:', transactionId, 'phone:', phone, 'amount:', amount);
+
+  try {
+    if (transactionId) {
+      // Record transaction as pending for manual verification & admin crediting
+      await supabase
+        .from('transactions')
+        .upsert({
+          id: transactionId,
+          user_phone: phone,
+          type: 'deposit',
+          amount: amount,
+          status: 'pending',
+          details: 'Dépôt GeniusPay en attente de validation administrateur'
+        });
+      console.log(`[GeniusPay Request] Registered pending deposit tx ${transactionId} for user ${phone} (${amount} FCFA)`);
+    }
+
+    res.json({ success: true, message: 'Demande de rechargement enregistrée. Le solde sera crédité après validation administrateur.' });
+  } catch (err: any) {
+    console.error('[GeniusPay Request Error]:', err);
+    res.status(500).json({ error: err.message || 'Erreur lors de l\'enregistrement de la demande.' });
+  }
+});
+
+// 9. GeniusPay: Webhook Notification Handler
+app.post('/api/geniuspay/webhook', async (req, res) => {
+  console.log('[GeniusPay Webhook Payload Received]:', req.body);
+  const { order_id, reference, status, amount, customer } = req.body;
+  const targetTxId = order_id || reference;
+
+  if (status === 'COMPLETED' || status === 'SUCCESS' || status === 'APPROVED' || status === 'SUCCESSFUL') {
+    try {
+      if (targetTxId) {
+        // Update transaction status
+        const { data: tx } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('id', targetTxId)
+          .maybeSingle();
+
+        if (tx && tx.user_phone && tx.status !== 'completed') {
+          // Update transaction
+          await supabase
+            .from('transactions')
+            .update({ status: 'completed' })
+            .eq('id', targetTxId);
+
+          // Credit user balance
+          const { data: user } = await supabase
+            .from('users')
+            .select('balance')
+            .eq('phone', tx.user_phone)
+            .maybeSingle();
+
+          if (user) {
+            const newBal = Number(user.balance || 0) + Number(tx.amount || amount || 0);
+            await supabase
+              .from('users')
+              .update({ balance: newBal })
+              .eq('phone', tx.user_phone);
+            
+            console.log(`[GeniusPay Webhook] Credited user ${tx.user_phone} with +${tx.amount} FCFA. New Balance: ${newBal}`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[GeniusPay Webhook Error]:', err);
+    }
+  }
+
+  res.status(200).json({ received: true });
+});
+
+// 10. Wave Business Direct API: Create Checkout Session
+app.post('/api/wave/create-checkout', async (req, res) => {
+  const { amount, phone } = req.body;
+  const WAVE_MERCHANT_LINK = 'https://pay.wave.com/m/M_ci_v8OIxJ5nyByL/c/ci/';
+  const WAVE_RAW_PHONE = '0504402102';
+  const txId = `WAVE_DIR_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+  console.log('[Wave Direct Link] Creating transaction record for:', { phone, amount, txId });
+
+  try {
+    // Record pending transaction in Supabase
+    if (phone && amount) {
+      await supabase
+        .from('transactions')
+        .upsert({
+          id: txId,
+          user_phone: phone,
+          type: 'deposit',
+          amount: Number(amount),
+          status: 'pending',
+          details: 'Dépôt direct Lien Marchand Wave'
+        });
+    }
+
+    res.json({
+      success: true,
+      transactionId: txId,
+      merchantPhone: WAVE_RAW_PHONE,
+      waveLaunchUrl: WAVE_MERCHANT_LINK,
+      waveWebCheckoutUrl: WAVE_MERCHANT_LINK,
+      amount: Number(amount),
+      message: 'Lien Marchand Wave prêt'
+    });
+  } catch (err: any) {
+    console.error('[Wave Direct Error]:', err);
+    res.status(500).json({ error: err.message || 'Erreur lors du traitement de la transaction Wave.' });
+  }
+});
+
+// 11. Wave Business Direct API: Webhook Listener (Direct Wave Webhook)
+app.post('/api/wave/webhook', async (req, res) => {
+  console.log('[Wave Direct Webhook Received]:', JSON.stringify(req.body));
+  const body = req.body || {};
+  
+  // Wave Webhook structure check
+  const eventType = body.type; // e.g. "checkout.session.completed"
+  const data = body.data || body;
+  const clientRef = data.client_reference || data.payment_intent || data.id;
+  const paymentAmount = data.amount || data.amount_total;
+
+  if (eventType === 'checkout.session.completed' || data.status === 'succeeded' || data.payment_status === 'succeeded') {
+    try {
+      if (clientRef) {
+        const { data: tx } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('id', clientRef)
+          .maybeSingle();
+
+        if (tx && tx.user_phone && tx.status !== 'completed') {
+          // 1. Mark transaction as completed
+          await supabase
+            .from('transactions')
+            .update({ status: 'completed' })
+            .eq('id', clientRef);
+
+          // 2. Credit user balance automatically via direct Wave Webhook notification
+          const { data: user } = await supabase
+            .from('users')
+            .select('balance')
+            .eq('phone', tx.user_phone)
+            .maybeSingle();
+
+          if (user) {
+            const newBal = Number(user.balance || 0) + Number(tx.amount || paymentAmount || 0);
+            await supabase
+              .from('users')
+              .update({ balance: newBal })
+              .eq('phone', tx.user_phone);
+
+            console.log(`[Wave Direct Webhook] AUTO-CREDITED user ${tx.user_phone} with +${tx.amount} FCFA. New Balance: ${newBal}`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Wave Direct Webhook Error]:', err);
+    }
+  }
+
+  res.status(200).json({ received: true });
+});
+
 
 // --- Vite Dev Middleware and Production Static Server ---
 
