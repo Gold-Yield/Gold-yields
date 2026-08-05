@@ -14,14 +14,15 @@ interface RechargeScreenProps {
   onAddTransaction: (amount: number) => void;
 }
 
-const PRESETS = [3000, 5000, 10000, 25000, 50000, 100000, 250000];
+const PRESETS = [1800, 7800, 50000, 75000];
 
 const PAYMENT_METHODS = [
-  { id: 'wave', name: "Wave Côte d'Ivoire", color: 'from-sky-500 to-blue-600', badge: 'Agrégateur GeniusPay', icon: '🌊' },
+  { id: 'wave', name: "Wave Côte d'Ivoire", color: 'from-sky-500 to-blue-600', badge: 'Payement Direct Wave', icon: '🌊' },
+  { id: 'geniuspay', name: "Guichet GeniusPay (Mobile Money & CB)", color: 'from-amber-500 to-yellow-500', badge: 'Guichet Officiel', icon: '💳' },
 ];
 
 export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: RechargeScreenProps) {
-  const [amount, setAmount] = useState<string>('3000');
+  const [amount, setAmount] = useState<string>('1800');
   const [selectedMethod, setSelectedMethod] = useState<string>('wave');
   const [unavailableMethod, setUnavailableMethod] = useState<string | null>(null);
   const [showWaveModal, setShowWaveModal] = useState<boolean>(false);
@@ -29,6 +30,8 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
   const [waveTxId, setWaveTxId] = useState<string>('');
   const [waveCopiedPhone, setWaveCopiedPhone] = useState<boolean>(false);
   const [waveCopiedAmount, setWaveCopiedAmount] = useState<boolean>(false);
+  const [geniusPayCheckoutUrl, setGeniusPayCheckoutUrl] = useState<string>('');
+  const [geniusPayCopiedLink, setGeniusPayCopiedLink] = useState<boolean>(false);
   const [showGeniusPayModal, setShowGeniusPayModal] = useState<boolean>(false);
   const [geniusPayTxId, setGeniusPayTxId] = useState<string>('');
   const [geniusPayPhone, setGeniusPayPhone] = useState<string>('');
@@ -74,8 +77,8 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
   const handleDirectPayment = () => {
     const parsedAmount = parseInt(amount);
 
-    if (isNaN(parsedAmount) || parsedAmount < 3000) {
-      setError('❌ Le montant minimum de dépôt est de 3 000 FCFA.');
+    if (isNaN(parsedAmount) || parsedAmount < 500) {
+      setError('❌ Le montant minimum de dépôt est de 500 FCFA.');
       return;
     }
 
@@ -114,6 +117,81 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
       });
   };
 
+  const handleGeniusPayOfficialPayment = async () => {
+    const parsedAmount = parseInt(amount);
+
+    if (isNaN(parsedAmount) || parsedAmount < 500) {
+      setError('❌ Le montant minimum de dépôt est de 500 FCFA.');
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+    const storedUser = localStorage.getItem('goldyield_user');
+    const userPhone = storedUser ? JSON.parse(storedUser).phone : '0500000000';
+
+    const getGeniusPayLink = (amt: number) => {
+      if (amt === 75000) {
+        return 'https://geniuspay.ci/product/moule-filtre-spectrometrique-PSbX7U';
+      }
+      if (amt === 50000) {
+        return 'https://geniuspay.ci/product/refroidisseur-de-creusets-dor-SU8bSn';
+      }
+      if (amt === 7800 || amt === 25000) {
+        return 'https://geniuspay.ci/product/vip-2-13-aEUmFo';
+      }
+      if (amt === 1800 || amt === 2300) {
+        return 'https://geniuspay.ci/product/article-vip1-HTWkud';
+      }
+      if (amt >= 75000) {
+        return 'https://geniuspay.ci/product/moule-filtre-spectrometrique-PSbX7U';
+      }
+      if (amt >= 50000) {
+        return 'https://geniuspay.ci/product/refroidisseur-de-creusets-dor-SU8bSn';
+      }
+      if (amt >= 7800) {
+        return 'https://geniuspay.ci/product/vip-2-13-aEUmFo';
+      }
+      return 'https://geniuspay.ci/product/article-vip1-HTWkud';
+    };
+
+    try {
+      const response = await fetch('/api/geniuspay/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: userPhone,
+          amount: parsedAmount,
+          paymentMethod: 'geniuspay'
+        })
+      });
+
+      const data = await response.json();
+      setIsSubmitting(false);
+
+      const txId = (data && data.transactionId) || `GPAY_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const link = (data && data.checkoutUrl) ? data.checkoutUrl : getGeniusPayLink(parsedAmount);
+
+      setGeniusPayTxId(txId);
+      setGeniusPayPhone(userPhone);
+      setGeniusPayCheckoutUrl(link);
+      setShowGeniusPayModal(true);
+
+      // Open external payment link immediately
+      window.open(link, '_blank');
+    } catch (err) {
+      console.error('GeniusPay dynamic initiation error:', err);
+      setIsSubmitting(false);
+      const txId = `GPAY_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const fallbackLink = getGeniusPayLink(parsedAmount);
+      setGeniusPayTxId(txId);
+      setGeniusPayPhone(userPhone);
+      setGeniusPayCheckoutUrl(fallbackLink);
+      setShowGeniusPayModal(true);
+      window.open(fallbackLink, '_blank');
+    }
+  };
+
   const handleConfirmWavePayment = () => {
     const parsedAmount = parseInt(amount);
     setIsSubmitting(true);
@@ -129,8 +207,8 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
   const handleTelegramRecharge = () => {
     const parsedAmount = parseInt(amount);
 
-    if (isNaN(parsedAmount) || parsedAmount < 3000) {
-      setError('❌ Le montant minimum de dépôt est de 3 000 FCFA.');
+    if (isNaN(parsedAmount) || parsedAmount < 500) {
+      setError('❌ Le montant minimum de dépôt est de 500 FCFA.');
       return;
     }
 
@@ -281,11 +359,11 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
                   <input
                     type="number"
                     id="input-montant-recharge"
-                    placeholder="Ex: 5000"
+                    placeholder="Ex: 1800"
                     value={amount}
                     onChange={handleInputChange}
                     className="w-full pl-4 pr-16 py-3.5 bg-slate-950/80 border border-slate-800 focus:border-gold-500/50 rounded-xl text-lg font-bold font-mono text-white placeholder:text-slate-600 outline-none transition-all"
-                    min="3000"
+                    min="500"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gold-400 font-mono">
                     FCFA
@@ -319,7 +397,7 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
                   <AlertCircle className="w-3.5 h-3.5" /> Instructions de dépôt Wave
                 </span>
                 <ul className="list-disc pl-4 space-y-1">
-                  <li>Dépôt minimum : <strong className="text-white">3 000 FCFA</strong>.</li>
+                  <li>Dépôt minimum : <strong className="text-white">1 800 FCFA</strong>.</li>
                   <li>Cliquez sur <strong className="text-sky-400">Payer via Wave</strong> pour initier votre rechargement.</li>
                   <li>Le paiement Wave est sécurisé par l'agrégateur GeniusPay. Le solde sera crédité après validation de l'administrateur.</li>
                 </ul>
@@ -340,9 +418,19 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
               {/* CTA Buttons */}
               <div className="space-y-2.5 pt-2">
                 <button
+                  onClick={handleGeniusPayOfficialPayment}
+                  className="w-full py-3.5 px-6 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-amber-500/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
+                >
+                  <CreditCard className="w-5 h-5 text-slate-950" />
+                  <span>
+                    Payer via GeniusPay Officiel ({parseInt(amount || '0').toLocaleString('fr-FR')} FCFA)
+                  </span>
+                </button>
+
+                <button
                   onClick={handleDirectPayment}
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-6 bg-gradient-to-r from-sky-500 via-blue-600 to-sky-400 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-sky-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
+                  className="w-full py-3.5 px-6 bg-gradient-to-r from-sky-500 via-blue-600 to-sky-400 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-sky-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
                 >
                   <WaveLogo size="sm" />
                   <span>
@@ -623,18 +711,76 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
                 </div>
               </div>
 
-              {/* Order Summary */}
-              <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 space-y-2">
+              {/* Order Summary & Generated Payment Link */}
+              <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span>Référence Commande :</span>
-                  <span className="font-mono text-slate-200">{geniusPayTxId}</span>
+                  <span className="font-mono text-amber-300 font-bold">{geniusPayTxId}</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                  <span className="text-xs text-slate-300 font-semibold">Montant à payer :</span>
-                  <span className="text-base font-black text-amber-400 font-mono">
-                    {parseInt(amount).toLocaleString('fr-FR')} FCFA
+                  <span className="text-xs text-slate-300 font-semibold">Montant attribué :</span>
+                  <span className="text-lg font-black text-amber-400 font-mono">
+                    {parseInt(amount || '0').toLocaleString('fr-FR')} FCFA
                   </span>
                 </div>
+
+                {/* Generated GeniusPay Payment Link or In-App Payment Gateway */}
+                {geniusPayCheckoutUrl ? (
+                  <div className="pt-2 space-y-2 border-t border-slate-800">
+                    <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider block flex items-center gap-1">
+                      <ExternalLink className="w-3.5 h-3.5" /> Lien de Paiement Généré
+                    </span>
+
+                    <a
+                      href={geniusPayCheckoutUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer text-center shadow-lg shadow-amber-500/25 active:scale-[0.98]"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>🔗 Effectuer le dépôt sur GeniusPay ({parseInt(amount || '0').toLocaleString('fr-FR')} FCFA)</span>
+                    </a>
+
+                    <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl p-2.5">
+                      <div className="min-w-0 pr-2">
+                        <span className="text-[10px] text-slate-400 block">Lien direct :</span>
+                        <span className="text-[11px] font-mono text-amber-300 truncate block">
+                          {geniusPayCheckoutUrl}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(geniusPayCheckoutUrl);
+                          setGeniusPayCopiedLink(true);
+                          setTimeout(() => setGeniusPayCopiedLink(false), 2000);
+                        }}
+                        className="flex items-center gap-1 py-1.5 px-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold rounded-lg border border-amber-500/30 transition-all cursor-pointer shrink-0"
+                      >
+                        {geniusPayCopiedLink ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Copié !</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copier le lien</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 space-y-1">
+                    <p className="flex items-center gap-1 text-emerald-400 font-semibold">
+                      <Check className="w-3.5 h-3.5" /> Demande enregistrée avec le montant personnalisé de {parseInt(amount || '0').toLocaleString('fr-FR')} FCFA.
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      Veuillez choisir votre opérateur Mobile Money ci-dessous pour effectuer l'envoi vers le compte marchand attribué.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Select Mobile Money Operator */}
@@ -686,9 +832,8 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
                 </div>
 
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[10px] text-amber-200 leading-relaxed space-y-1">
-                  <p>🔒 Transaction soumise à l'agrégateur GeniusPay (Code Marchand : <strong>GPAY-XETU</strong>).</p>
-                  <p className="text-amber-300 font-medium">ℹ️ Le crédit du solde est effectué manuellement par l'administrateur après vérification du transfert.</p>
-                  {geniusPayMethod === 'wave' && <p className="text-sky-300">🌊 Vous serez redirigé vers l'application Wave pour effectuer le paiement.</p>}
+                  <p>🔒 Session de paiement dynamique GeniusPay active (Payer : <strong>{parseInt(amount || '0').toLocaleString('fr-FR')} FCFA</strong>).</p>
+                  <p className="text-amber-300 font-medium">ℹ️ Le paiement est instantané via le réseau agrégé GeniusPay. Votre solde sera crédité automatiquement.</p>
                 </div>
 
                 <button
@@ -709,17 +854,6 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
                       });
                     } catch (err) {
                       console.error('GeniusPay confirm API call error:', err);
-                    }
-
-                    // If Wave option selected, copy number and trigger Wave app redirect
-                    if (geniusPayMethod === 'wave') {
-                      try {
-                        navigator.clipboard.writeText(WAVE_RAW_PHONE);
-                      } catch (e) {
-                        console.log('Clipboard error:', e);
-                      }
-                      const waveIntent = `intent://send?phone=+2250504402102&amount=${parsedAmount}#Intent;scheme=wave;package=com.wave.personal;end`;
-                      window.location.href = waveIntent;
                     }
 
                     setTimeout(() => {

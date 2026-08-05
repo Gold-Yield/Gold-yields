@@ -14,6 +14,7 @@ import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { LiveNotification } from './components/LiveNotification';
 import { AssistantBubble } from './components/AssistantBubble';
+import { BottomNav, MobileTab } from './components/BottomNav';
 import { InvestmentPlan, ActiveInvestment, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckCircle, AlertCircle, Sparkles, X } from 'lucide-react';
@@ -43,6 +44,16 @@ const calculateAccruedEarnings = (activePlans: any[], lastTime: number, now: num
 export default function App() {
   // Screen routing states: 'auth' | 'dashboard' | 'order' | 'recharge' | 'withdraw'
   const [screen, setScreen] = useState<'auth' | 'dashboard' | 'order' | 'recharge' | 'withdraw'>('auth');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'plans' | 'tasks' | 'assets' | 'profile'>('home');
+
+  const handleMobileTabSelect = (tab: MobileTab) => {
+    if (tab === 'recharge') {
+      setScreen('recharge');
+    } else {
+      setDashboardTab(tab);
+      setScreen('dashboard');
+    }
+  };
   
   // User Authentication & wallet states
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -163,7 +174,7 @@ export default function App() {
             setIsLoggedIn(true);
             setUserPhone(phone);
             setUserName(localStorage.getItem(`gy_${phone}_name`) || 'Investisseur Gold');
-            setBalance(parseInt(localStorage.getItem(`gy_${phone}_balance`) || '1000'));
+            setBalance(parseInt(localStorage.getItem(`gy_${phone}_balance`) || '500'));
             setInviteCode(localStorage.getItem(`gy_${phone}_invite`) || 'GOLDYIELD');
             
             const savedPlans = localStorage.getItem(`gy_${phone}_active_plans`);
@@ -439,6 +450,39 @@ export default function App() {
     }
   };
 
+  // Complete Daily Task / Mining Article Handler (with functional state update to prevent stale closures)
+  const handleCompleteTask = (taskTitle: string, reward: number) => {
+    setBalance((prevBalance) => {
+      const updatedBalance = prevBalance + reward;
+      if (userPhone) {
+        fetch('/api/user/sync-tick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: userPhone,
+            balance: updatedBalance
+          }),
+        }).catch(() => {});
+      }
+      return updatedBalance;
+    });
+
+    const newTx: Transaction = {
+      id: `tx_task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      type: 'collect',
+      amount: reward,
+      date: new Date().toISOString(),
+      status: 'completed',
+      details: reward >= 0 ? `Récompense : ${taskTitle}` : `Achat Article : ${taskTitle}`
+    };
+
+    setTransactions((prev) => [newTx, ...prev]);
+    showToast(
+      `${reward >= 0 ? '+' : ''}${reward.toLocaleString('fr-FR')} FCFA pour : ${taskTitle} !`,
+      reward >= 0 ? 'success' : 'info'
+    );
+  };
+
   // Recharge transactions handler (using Supabase backend API)
   const handleRechargeTx = async (amount: number) => {
     try {
@@ -469,14 +513,15 @@ export default function App() {
   };
 
   // Withdrawal success transactions handler (using Supabase backend API)
-  const handleWithdrawSuccess = async (amount: number) => {
+  const handleWithdrawSuccess = async (amount: number, vipLevel?: string) => {
     try {
       const res = await fetch('/api/user/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: userPhone,
-          amount
+          amount,
+          vipLevel
         })
       });
 
@@ -529,9 +574,15 @@ export default function App() {
             onOpenRecharge={() => setScreen('recharge')}
             onOpenWithdraw={() => setScreen('withdraw')}
             onCollectGains={handleCollectGains}
+            onCompleteTask={handleCompleteTask}
             claimableSum={claimableSum}
             schemaCacheStale={schemaCacheStale}
             userPhone={userPhone}
+            userName={userName}
+            onLogout={handleLogout}
+            activeTab={dashboardTab}
+            onTabChange={(tab) => setDashboardTab(tab)}
+            showToast={showToast}
           />
         )}
 
@@ -555,6 +606,9 @@ export default function App() {
         {screen === 'withdraw' && isLoggedIn && (
           <WithdrawScreen
             currentBalance={balance}
+            userPhone={userPhone}
+            activeInvestments={activeInvestments}
+            transactions={transactions}
             onBack={() => setScreen('dashboard')}
             onWithdrawSuccess={handleWithdrawSuccess}
             showToast={showToast}
@@ -570,6 +624,15 @@ export default function App() {
 
       {/* Floating Interactive Customer Support Assistant Bubble */}
       <AssistantBubble />
+
+      {/* Mobile Bottom Navigation Bar (Application Mobile Native Style) */}
+      {isLoggedIn && screen !== 'auth' && (
+        <BottomNav
+          currentTab={screen === 'recharge' ? 'recharge' : dashboardTab}
+          onSelectTab={handleMobileTabSelect}
+          activePlansCount={activeInvestments.length}
+        />
+      )}
 
       {/* Interactive Registration Welcome Bonus popup */}
       <BonusModal isOpen={isBonusOpen} onClose={() => setIsBonusOpen(false)} />

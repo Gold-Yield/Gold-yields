@@ -17,23 +17,23 @@ export function AssistantBubble() {
     },
     {
       q: "Combien puis-je gagner avec le parrainage ?",
-      a: "Vous gagnez 10% de commission instantanée sur chaque recharge de vos parrainés. De plus, votre filleul reçoit un bonus de bienvenue de 1 000 FCFA."
+      a: "Vous gagnez 10% de commission instantanée sur chaque recharge de vos parrainés. De plus, votre filleul reçoit un bonus de bienvenue de 500 FCFA."
     },
     {
       q: "Quand puis-je retirer mes gains ?",
-      a: "Vous pouvez collecter vos gains de raffinage en temps réel à tout moment et effectuer une demande de retrait dès le seuil minimal atteint."
+      a: "Vos bénéfices de minage et vos récompenses de validation VIP sont automatiquement ajoutés à votre solde. Vous pouvez demander un retrait dès le seuil minimal atteint."
     }
   ];
 
   return (
-    <div className="fixed bottom-6 right-6 z-[90] flex flex-col items-end">
+    <div className="fixed bottom-20 right-3 md:bottom-20 md:right-6 z-[90] flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="mb-4 w-[340px] bg-slate-900/95 border border-slate-800 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md"
+            className="mb-3 w-[320px] max-w-[calc(100vw-2rem)] bg-slate-900/95 border border-slate-800 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md"
           >
             {/* Header */}
             <div className="p-4 bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between">
@@ -230,16 +230,16 @@ export function AssistantBubble() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-14 h-14 bg-gradient-to-r from-gold-500 to-amber-400 hover:from-gold-400 hover:to-amber-300 text-slate-950 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:shadow-[0_12px_35px_rgba(245,158,11,0.45)] cursor-pointer relative z-50 group border border-amber-300/30"
+        className="w-11 h-11 bg-gradient-to-r from-gold-500 to-amber-400 hover:from-gold-400 hover:to-amber-300 text-slate-950 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(245,158,11,0.25)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] cursor-pointer relative z-50 group border border-amber-300/40"
       >
-        <span className="absolute inset-0 rounded-full bg-gold-400/20 animate-ping opacity-75 group-hover:opacity-0 transition-opacity" />
+        <span className="absolute inset-0 rounded-full bg-gold-400/20 animate-ping opacity-40 group-hover:opacity-0 transition-opacity" />
         
         {isOpen ? (
-          <X className="w-6 h-6 text-slate-950 transition-transform duration-300 rotate-90" />
+          <X className="w-5 h-5 text-slate-950 transition-transform duration-300 rotate-90" />
         ) : (
           <div className="relative">
-            <MessageCircle className="w-6 h-6 text-slate-950" />
-            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white font-bold text-[8px] px-1 rounded-full border border-gold-500 animate-pulse">
+            <MessageCircle className="w-5 h-5 text-slate-950" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white font-bold text-[8px] px-1 rounded-full border border-gold-500 animate-pulse">
               1
             </span>
           </div>

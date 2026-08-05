@@ -18,7 +18,7 @@ interface NotificationItem {
 
 const PHONE_PREFIXES = ['+225', '+221', '+229', '+228', '+223', '+242', '+237'];
 const FIRST_NAMES = ['Jean', 'Koffi', 'Moussa', 'Amadou', 'Oumar', 'Mariam', 'Awa', 'Fatou', 'Aminata', 'Bakary', 'Yao', 'Kouassi', 'Sékou'];
-const AMOUNTS = [1000, 3000, 5000, 10000, 25000, 50000, 100000, 250000];
+const AMOUNTS = [500, 1000, 3000, 5000, 10000, 25000, 50000, 100000, 250000];
 const PLANS = ["Poussière d'Or", "Pépite d'Or", "Lingot d'Or", "Barre d'Or", "Coffre-Fort d'Or", "Filon d'Or"];
 
 function generateRandomNotification(): NotificationItem {
@@ -37,8 +37,8 @@ function generateRandomNotification(): NotificationItem {
 
   if (typeRand < 0.4) {
     type = 'deposit';
-    // Ensure deposit amounts start from 3000 FCFA
-    const depositAmounts = AMOUNTS.filter(a => a >= 3000);
+    // Ensure deposit amounts start from 500 FCFA
+    const depositAmounts = AMOUNTS.filter(a => a >= 500);
     amount = depositAmounts[Math.floor(Math.random() * depositAmounts.length)];
   } else if (typeRand < 0.8) {
     type = 'investment';
@@ -102,7 +102,7 @@ export function LiveNotification() {
   }, [currentNotif]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-full max-w-xs md:max-w-sm pointer-events-none px-4 md:px-0">
+    <div className="fixed bottom-20 left-3 sm:left-6 right-16 sm:right-auto z-40 max-w-xs sm:max-w-sm pointer-events-none">
       <AnimatePresence>
         {currentNotif && (
           <motion.div
@@ -126,10 +126,15 @@ export function LiveNotification() {
             {/* Content information */}
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                  {currentNotif.type === 'deposit' ? 'Recharge Réussie' :
-                   currentNotif.type === 'withdrawal' ? 'Retrait Validé' :
-                   'Contrat Activé'}
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1">
+                  <span>
+                    {currentNotif.type === 'deposit' ? 'Recharge Réussie' :
+                     currentNotif.type === 'withdrawal' ? 'Retrait Validé' :
+                     'Contrat Activé'}
+                  </span>
+                  <span className="text-[8px] bg-emerald-500/20 text-emerald-300 font-mono font-extrabold px-1.5 py-0.2 rounded border border-emerald-500/30">
+                    Reçu Certifié 📄
+                  </span>
                 </span>
                 <span className="text-[9px] text-slate-500 font-mono">{currentNotif.timeAgo}</span>
               </div>

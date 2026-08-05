@@ -53,6 +53,26 @@ CREATE TABLE IF NOT EXISTS transactions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 4. Création et mise à jour de la table 'investment_plans' (Nouveaux VIP 1 & VIP 2)
+CREATE TABLE IF NOT EXISTS investment_plans (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    price NUMERIC NOT NULL,
+    daily_profit NUMERIC DEFAULT 0,
+    duration_days NUMERIC DEFAULT 30,
+    total_profit NUMERIC DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Vider les anciens plans obsolètes et insérer la nouvelle structure VIP
+TRUNCATE TABLE investment_plans CASCADE;
+
+INSERT INTO investment_plans (id, name, price, daily_profit, duration_days, total_profit) VALUES
+('vip1_machine', 'Pack Machine VIP 1', 1800, 1000, 30, 30000),
+('vip2_article1', 'Broyeur Hydraulique Quartz 24K (VIP 2 • 1/3)', 25000, 0, 30, 0),
+('vip2_article2', 'Refroidisseur de Creusets d''Or (VIP 2 • 2/3)', 50000, 0, 30, 0),
+('vip2_article3', 'Moule & Filtre Spectrométrique (VIP 2 • 3/3)', 75000, 3000, 30, 200000);
+
 -- Création d'index pour optimiser les performances des requêtes
 CREATE INDEX IF NOT EXISTS idx_active_investments_user ON active_investments(user_phone);
 CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_phone);

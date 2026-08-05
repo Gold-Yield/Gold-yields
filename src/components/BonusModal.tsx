@@ -69,7 +69,7 @@ export function BonusModal({ isOpen, onClose }: BonusModalProps) {
                 Solde de Bienvenue Offert
               </span>
               <span className="text-3xl font-extrabold font-mono text-gold-400">
-                1,000 FCFA
+                500 FCFA
               </span>
             </div>
 

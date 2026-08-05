@@ -41,6 +41,18 @@ export interface Transaction {
   details?: string;
 }
 
+export interface DailyTask {
+  id: string;
+  title: string;
+  description: string;
+  reward: number;
+  category: 'beginner' | 'intermediate' | 'vip' | 'elite';
+  requiredPlanName?: string;
+  minPriceRequired?: number;
+  iconName: string;
+  isCompleted?: boolean;
+}
+
 export interface UserState {
   isLoggedIn: boolean;
   name: string;

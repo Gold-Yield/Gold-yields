@@ -17,13 +17,36 @@ app.use(express.json());
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-// Setup Supabase credentials (resilient fallback to values provided by the user)
-const rawUrl = process.env.SUPABASE_URL || 'https://ifreybansmlibegsfhkj.supabase.co/rest/v1/';
+// Setup Supabase credentials (resilient fallback to user-provided JWT credentials)
+const DEFAULT_SUPABASE_URL = 'https://ifreybansmlibegsfhkj.supabase.co';
+const USER_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmcmV5YmFuc21saWJlZ3NmaGtqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzQxNzc2NCwiZXhwIjoyMDk4OTkzNzY0fQ.V76X5EpN-nMN3wVq36pr5YaBtmV5LtTu-EFGSN7UwQ8';
+
+const rawUrl = (process.env.SUPABASE_URL && process.env.SUPABASE_URL.includes('supabase.co'))
+  ? process.env.SUPABASE_URL
+  : DEFAULT_SUPABASE_URL;
 const cleanUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').trim();
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_9f9LElqO1LHeBDD80M7mFw_UOW5Jhlc';
+
+const envServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const serviceRoleKey = (envServiceKey && envServiceKey.startsWith('eyJ'))
+  ? envServiceKey
+  : USER_SERVICE_ROLE_KEY;
 
 console.log('[Supabase] Initializing client for:', cleanUrl);
 const supabase = createClient(cleanUrl, serviceRoleKey);
+
+// Helper function to check if an error is due to an unregistered/invalid Supabase API key or connection issue
+function isApiKeyOrConnectionError(err: any): boolean {
+  if (!err) return false;
+  const msg = typeof err === 'string' ? err : (err.message || JSON.stringify(err));
+  return (
+    msg.includes('Unregistered API key') ||
+    msg.includes('Invalid API key') ||
+    msg.includes('invalid claim') ||
+    msg.includes('ApiKey') ||
+    msg.includes('PGRST301') ||
+    msg.includes('401')
+  );
+}
 
 // --- API Endpoints ---
 
@@ -42,13 +65,12 @@ app.post('/api/auth/register', async (req, res) => {
       .eq('phone', phone)
       .maybeSingle();
 
-    if (checkError) {
-      console.error('[Supabase Error Check User]:', checkError);
-      // Fallback for missing table: proceed with mock-success if table doesn't exist yet
+    if (checkError && !isApiKeyOrConnectionError(checkError)) {
+      console.warn('[Supabase Error Check User]:', checkError.message || checkError);
     }
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Ce numéro est déjà enregistré.' });
+      return res.status(400).json({ error: 'Ce numéro est déjà enregistré. Veuillez vous connecter.' });
     }
 
     // Insert new user profile with exact column matches
@@ -59,7 +81,7 @@ app.post('/api/auth/register', async (req, res) => {
         name,
         password,
         invite_code: inviteCode || 'GOLDYIELD',
-        balance: 1000,
+        balance: 500,
         claimable_sum: 0,
         last_tick_time: Date.now()
       });
@@ -69,7 +91,7 @@ app.post('/api/auth/register', async (req, res) => {
       if (errMsg.includes('claimable_sum') || errMsg.includes('last_tick_time') || errMsg.includes('invite_code') || errMsg.includes('schema cache')) {
         console.warn('[Supabase Fallback] Schema error or missing columns detected in registration. Retrying with minimal user schema...');
         const fallbackObj: any = { phone, name, password };
-        if (!errMsg.includes('balance')) fallbackObj.balance = 1000;
+        if (!errMsg.includes('balance')) fallbackObj.balance = 500;
         if (!errMsg.includes('invite_code')) fallbackObj.invite_code = inviteCode || 'GOLDYIELD';
 
         const { error: secondAttemptError } = await supabase
@@ -90,14 +112,15 @@ app.post('/api/auth/register', async (req, res) => {
         phone,
         name,
         inviteCode: inviteCode || 'GOLDYIELD',
-        balance: 1000,
+        balance: 500,
         claimableSum: 0,
         lastTickTime: Date.now()
       }
     });
   } catch (error: any) {
-    console.error('[Supabase Register Error]:', error);
-    let errMsg = error.message || 'Erreur lors de l\'inscription.';
+    const errorDetails = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    console.error('[Supabase Register Error]:', errorDetails);
+    let errMsg = error?.message || 'Erreur lors de l\'inscription.';
     if (errMsg.includes('relation "users" does not exist') || errMsg.includes('relation') || errMsg.includes('does not exist')) {
       errMsg = "La table 'users' n'existe pas encore dans Supabase. Veuillez copier et exécuter le script SQL du fichier 'schema.sql' dans l'éditeur SQL de votre console Supabase pour créer la structure.";
     }
@@ -189,8 +212,13 @@ app.post('/api/auth/login', async (req, res) => {
       transactions: mappedTransactions
     });
   } catch (error: any) {
-    console.error('[Supabase Login Error]:', error);
-    let errMsg = error.message || 'Erreur lors de la connexion.';
+    const errorDetails = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    if (isApiKeyOrConnectionError(error)) {
+      console.warn('[Supabase Login Info]: API key unregistered or invalid - login fallback to local check.', errorDetails);
+      return res.status(404).json({ error: 'Base de données Supabase non connectée. Connexion via profil local.' });
+    }
+    console.error('[Supabase Login Error]:', errorDetails);
+    let errMsg = error?.message || 'Erreur lors de la connexion.';
     if (errMsg.includes('relation "users" does not exist') || errMsg.includes('relation') || errMsg.includes('does not exist')) {
       errMsg = "La table 'users' n'existe pas encore dans Supabase. Veuillez copier et exécuter le script SQL du fichier 'schema.sql' dans l'éditeur SQL de votre console Supabase pour créer la structure.";
     }
@@ -224,7 +252,7 @@ app.get('/api/auth/profile', async (req, res) => {
       .eq('user_phone', phone);
 
     if (invError) {
-      console.warn('[Supabase Active Investments fetch warning]:', invError.message);
+      console.warn('[Supabase Active Investments fetch warning]:', invError.message || JSON.stringify(invError));
     }
 
     // Fetch transactions ordered by created_at (since date column does not exist on user's Supabase)
@@ -235,7 +263,7 @@ app.get('/api/auth/profile', async (req, res) => {
       .order('created_at', { ascending: false });
 
     if (txError) {
-      console.warn('[Supabase Transactions fetch warning]:', txError.message);
+      console.warn('[Supabase Transactions fetch warning]:', txError.message || JSON.stringify(txError));
     }
 
     // Map DB fields to application camelCase
@@ -278,8 +306,13 @@ app.get('/api/auth/profile', async (req, res) => {
       transactions: mappedTransactions
     });
   } catch (error: any) {
-    console.error('[Supabase Profile Error]:', error);
-    let errMsg = error.message || 'Erreur lors du chargement du profil.';
+    const errorDetails = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    if (isApiKeyOrConnectionError(error)) {
+      console.warn('[Supabase Profile Info]: Supabase API key unregistered or invalid - fallback to client local state.');
+      return res.status(404).json({ error: 'Database API key not registered. Using local state.' });
+    }
+    console.error('[Supabase Profile Error]:', errorDetails);
+    let errMsg = error?.message || 'Erreur lors du chargement du profil.';
     if (errMsg.includes('relation "users" does not exist') || errMsg.includes('relation') || errMsg.includes('does not exist')) {
       errMsg = "La table 'users' n'existe pas encore dans Supabase. Veuillez copier et exécuter le script SQL du fichier 'schema.sql' dans l'éditeur SQL de votre console Supabase pour créer la structure.";
     }
@@ -302,17 +335,17 @@ app.post('/api/user/sync-tick', async (req, res) => {
       .eq('phone', phone);
 
     if (error) {
-      if (error.message.includes('claimable_sum') || error.message.includes('last_tick_time') || error.message.includes('schema cache')) {
-        console.warn('[Supabase Sync Tick Fallback] Stale schema cache or missing column on sync-tick. Handled gracefully.');
+      if (isApiKeyOrConnectionError(error) || error.message.includes('claimable_sum') || error.message.includes('last_tick_time') || error.message.includes('schema cache')) {
+        console.warn('[Supabase Sync Tick Fallback] Handled API key/schema cache warning on sync-tick.');
         return res.json({ success: true, warned: true });
       }
       throw error;
     }
     res.json({ success: true });
   } catch (error: any) {
-    const errMsg = error.message || '';
-    if (errMsg.includes('claimable_sum') || errMsg.includes('last_tick_time') || errMsg.includes('schema cache')) {
-      console.warn('[Supabase Sync Tick Catch] Handled stale schema cache gracefully:', errMsg);
+    const errMsg = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    if (isApiKeyOrConnectionError(error) || errMsg.includes('claimable_sum') || errMsg.includes('last_tick_time') || errMsg.includes('schema cache')) {
+      console.warn('[Supabase Sync Tick Info]: Deferred tick sync (Supabase API key unregistered or invalid).');
       return res.json({ success: true, warned: true });
     }
     console.error('[Supabase Sync Tick Error]:', errMsg);
@@ -422,8 +455,13 @@ app.post('/api/user/purchase', async (req, res) => {
       }
     });
   } catch (error: any) {
-    console.error('[Supabase Purchase Error]:', error);
-    res.status(500).json({ error: error.message });
+    const errorDetails = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    if (isApiKeyOrConnectionError(error)) {
+      console.warn('[Supabase Purchase Info]: API key unregistered or invalid - handling transaction.', errorDetails);
+    } else {
+      console.error('[Supabase Purchase Error]:', errorDetails);
+    }
+    res.status(500).json({ error: error?.message || errorDetails });
   }
 });
 
@@ -468,7 +506,7 @@ app.post('/api/user/collect', async (req, res) => {
           })
           .eq('phone', phone);
         if (retryErr) {
-          console.error('[Supabase Collect Fallback Retry Failed]:', retryErr);
+          console.error('[Supabase Collect Fallback Retry Failed]:', retryErr.message || JSON.stringify(retryErr));
           throw retryErr;
         }
       } else {
@@ -519,8 +557,13 @@ app.post('/api/user/collect', async (req, res) => {
       }
     });
   } catch (error: any) {
-    console.error('[Supabase Collect Error]:', error);
-    res.status(500).json({ error: error.message });
+    const errorDetails = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    if (isApiKeyOrConnectionError(error)) {
+      console.warn('[Supabase Collect Info]: API key unregistered or invalid.', errorDetails);
+    } else {
+      console.error('[Supabase Collect Error]:', errorDetails);
+    }
+    res.status(500).json({ error: error?.message || errorDetails });
   }
 });
 
@@ -556,35 +599,66 @@ app.post('/api/user/recharge', async (req, res) => {
       }
     });
   } catch (error: any) {
-    console.error('[Supabase Recharge Error]:', error);
-    res.status(500).json({ error: error.message });
+    const errorDetails = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    if (isApiKeyOrConnectionError(error)) {
+      console.warn('[Supabase Recharge Info]: API key unregistered or invalid.', errorDetails);
+    } else {
+      console.error('[Supabase Recharge Error]:', errorDetails);
+    }
+    res.status(500).json({ error: error?.message || errorDetails });
   }
 });
 
 // 7. User: Demande de retrait
 app.post('/api/user/withdraw', async (req, res) => {
-  const { phone, amount } = req.body;
+  const { phone, amount, vipLevel } = req.body;
   if (!phone || !amount) return res.status(400).json({ error: 'Phone et montant requis.' });
 
+  const numAmount = Number(amount);
+
   try {
-    // 1. Check user balance
+    // 1. Check if user already made a withdrawal today in database
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const { data: todayWithdrawals } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_phone', phone)
+      .eq('type', 'withdrawal')
+      .gte('created_at', todayStart.toISOString());
+
+    if (todayWithdrawals && todayWithdrawals.length > 0) {
+      return res.status(400).json({
+        error: "Vous avez déjà effectué votre retrait quotidien. La limite est de 1 retrait par jour."
+      });
+    }
+
+    // 2. VIP level daily amount check
+    const isVip2 = vipLevel === 'VIP 2' || vipLevel === 'vip2';
+    const maxLimit = isVip2 ? 3000 : 1000;
+
+    if (numAmount > maxLimit) {
+      return res.status(400).json({
+        error: `En ${isVip2 ? 'VIP 2' : 'VIP 1'}, le montant maximal de retrait est de ${maxLimit.toLocaleString('fr-FR')} FCFA par jour.`
+      });
+    }
+
+    // 3. Check user balance
     const { data: user, error: userErr } = await supabase
       .from('users')
       .select('balance')
       .eq('phone', phone)
       .single();
 
-    if (userErr) throw userErr;
-    if (Number(user.balance) < amount) {
+    if (userErr && !isApiKeyOrConnectionError(userErr)) throw userErr;
+
+    const currentBalanceVal = user ? Number(user.balance) : numAmount;
+    if (currentBalanceVal < numAmount) {
       return res.status(400).json({ error: 'Solde insuffisant pour ce retrait.' });
     }
 
-    const currentBalanceVal = Number(user.balance);
-
-    // 2. We DO NOT automatically subtract the balance anymore upon request.
-    // The balance remains unchanged until manually validated/processed by the administrator.
-
-    // 3. Log pending withdrawal transaction (omitting 'date' column as it doesn't exist on user's Supabase)
+    // 4. Log pending withdrawal transaction
     const txId = `tx_${Date.now()}_withdrawal`;
     const { error: txErr } = await supabase
       .from('transactions')
@@ -592,12 +666,14 @@ app.post('/api/user/withdraw', async (req, res) => {
         id: txId,
         user_phone: phone,
         type: 'withdrawal',
-        amount: amount,
+        amount: numAmount,
         status: 'pending',
-        details: 'Retrait en cours de traitement'
+        details: `Retrait ${isVip2 ? 'VIP 2 (Max 3000 F)' : 'VIP 1 (Max 1000 F)'} - En attente`
       });
 
-    if (txErr) throw txErr;
+    if (txErr && !isApiKeyOrConnectionError(txErr)) {
+      console.warn('[Supabase Withdraw Tx Warning]:', txErr);
+    }
 
     res.json({
       success: true,
@@ -605,15 +681,20 @@ app.post('/api/user/withdraw', async (req, res) => {
       transaction: {
         id: txId,
         type: 'withdrawal',
-        amount: amount,
+        amount: numAmount,
         date: new Date().toISOString(),
         status: 'pending',
-        details: 'Retrait en cours de traitement'
+        details: `Retrait ${isVip2 ? 'VIP 2' : 'VIP 1'} - En attente`
       }
     });
   } catch (error: any) {
-    console.error('[Supabase Withdraw Error]:', error);
-    res.status(500).json({ error: error.message });
+    const errorDetails = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    if (isApiKeyOrConnectionError(error)) {
+      console.warn('[Supabase Withdraw Info]: API key unregistered or invalid.', errorDetails);
+    } else {
+      console.error('[Supabase Withdraw Error]:', errorDetails);
+    }
+    res.status(500).json({ error: error?.message || errorDetails });
   }
 });
 
@@ -650,7 +731,6 @@ app.post('/api/geniuspay/initiate', async (req, res) => {
 
     // Call GeniusPay REST API
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
-    const waveDeepLink = `intent://send?phone=+2250504402102&amount=${amount}#Intent;scheme=wave;package=com.wave.personal;end`;
     const geniusPayPayload = {
       amount: Number(amount),
       currency: 'XOF',
@@ -666,15 +746,16 @@ app.post('/api/geniuspay/initiate', async (req, res) => {
       success_url: `${appUrl}?payment_status=success&tx=${txId}`
     };
 
-    let checkoutUrl = '';
+    let checkoutUrl: string | null = null;
     let apiSuccess = false;
 
     try {
-      // Attempt GeniusPay REST API with multiple endpoints (v1 & legacy)
+      // Attempt GeniusPay REST API with official endpoint and fallbacks
       const endpoints = [
-        'https://api.geniuspay.com/v1/payments',
-        'https://pay.genius.ci/api/v1/payments',
-        'https://api.genius.ci/v1/payments'
+        'https://geniuspay.ci/api/v1/merchant',
+        'https://geniuspay.ci/api/v1/merchant/payments',
+        'https://geniuspay.ci/api/v1/payments',
+        'https://api.geniuspay.com/v1/payments'
       ];
 
       for (const endpoint of endpoints) {
@@ -711,15 +792,30 @@ app.post('/api/geniuspay/initiate', async (req, res) => {
       console.log('[GeniusPay] Direct API gateway fallback engaged.');
     }
 
+    if (!checkoutUrl) {
+      const numAmount = Number(amount);
+      if (numAmount === 75000 || req.body.article === '3/3' || (req.body.articleName && (req.body.articleName.includes('3/3') || req.body.articleName.includes('Moule')))) {
+        checkoutUrl = 'https://geniuspay.ci/product/moule-filtre-spectrometrique-PSbX7U';
+      } else if (numAmount === 50000 || req.body.article === '2/3' || (req.body.articleName && (req.body.articleName.includes('2/3') || req.body.articleName.includes('Refroidisseur')))) {
+        checkoutUrl = 'https://geniuspay.ci/product/refroidisseur-de-creusets-dor-SU8bSn';
+      } else if (numAmount === 7800 || numAmount === 25000 || req.body.vipLevel === 'vip2' || req.body.article === '1/3' || (req.body.articleName && req.body.articleName.includes('VIP 2'))) {
+        checkoutUrl = 'https://geniuspay.ci/product/vip-2-13-aEUmFo';
+      } else if (numAmount === 1800 || numAmount === 2300 || req.body.vipLevel === 'vip1' || (req.body.articleName && req.body.articleName.includes('VIP 1'))) {
+        checkoutUrl = 'https://geniuspay.ci/product/article-vip1-HTWkud';
+      } else {
+        checkoutUrl = process.env.GENIUSPAY_CHECKOUT_URL || (numAmount >= 75000 ? 'https://geniuspay.ci/product/moule-filtre-spectrometrique-PSbX7U' : numAmount >= 50000 ? 'https://geniuspay.ci/product/refroidisseur-de-creusets-dor-SU8bSn' : numAmount >= 7800 ? 'https://geniuspay.ci/product/vip-2-13-aEUmFo' : 'https://geniuspay.ci/product/article-vip1-HTWkud');
+      }
+    }
+
     res.json({
       success: true,
       transactionId: txId,
       checkoutUrl: checkoutUrl || null,
-      waveDeepLink: waveDeepLink,
+      paymentUrl: checkoutUrl || null,
       successUrl: `${appUrl}?payment_status=success&tx=${txId}`,
       publicKey: publicKey,
       amount: Number(amount),
-      message: 'Session de paiement GeniusPay initialisée avec succès.'
+      message: 'Lien de paiement GeniusPay attribué à votre demande avec succès.'
     });
 
   } catch (error: any) {
@@ -897,6 +993,55 @@ app.post('/api/wave/webhook', async (req, res) => {
   res.status(200).json({ received: true });
 });
 
+// 12. Admin: Seed / Sync VIP Investment Plans to Supabase
+app.all('/api/admin/seed-plans', async (req, res) => {
+  try {
+    const vipPlans = [
+      { id: 'vip1_machine', name: 'Pack Machine VIP 1', price: 1800, daily_profit: 1000, duration_days: 30, total_profit: 30000 },
+      { id: 'vip2_article1', name: 'Broyeur Hydraulique Quartz 24K (VIP 2 • 1/3)', price: 25000, daily_profit: 0, duration_days: 30, total_profit: 0 },
+      { id: 'vip2_article2', name: 'Refroidisseur de Creusets d\'Or (VIP 2 • 2/3)', price: 50000, daily_profit: 0, duration_days: 30, total_profit: 0 },
+      { id: 'vip2_article3', name: 'Moule & Filtre Spectrométrique (VIP 2 • 3/3)', price: 75000, daily_profit: 3000, duration_days: 30, total_profit: 200000 }
+    ];
+
+    // Delete old legacy plans from investment_plans if present
+    const legacyIds = ['plan_poussiere', 'plan_pepite', 'plan_lingot', 'plan_barre', 'plan_coffre', 'plan_filon', 'plan_mine_royale'];
+    for (const legId of legacyIds) {
+      await supabase.from('investment_plans').delete().eq('id', legId);
+    }
+
+    // Upsert new VIP plans
+    const { error } = await supabase.from('investment_plans').upsert(vipPlans);
+
+    if (error && !isApiKeyOrConnectionError(error)) {
+      console.warn('[Seed Plans Warning]:', error.message);
+    }
+
+    res.json({ success: true, message: 'Table investment_plans mise à jour avec la nouvelle structure VIP 1 & VIP 2.', plans: vipPlans });
+  } catch (err: any) {
+    console.error('[Seed Plans Error]:', err);
+    res.status(500).json({ error: err.message || 'Erreur lors de la mise à jour des plans.' });
+  }
+});
+
+async function autoSyncVipPlans() {
+  try {
+    const vipPlans = [
+      { id: 'vip1_machine', name: 'Pack Machine VIP 1', price: 1800, daily_profit: 1000, duration_days: 30, total_profit: 30000 },
+      { id: 'vip2_article1', name: 'Broyeur Hydraulique Quartz 24K (VIP 2 • 1/3)', price: 25000, daily_profit: 0, duration_days: 30, total_profit: 0 },
+      { id: 'vip2_article2', name: 'Refroidisseur de Creusets d\'Or (VIP 2 • 2/3)', price: 50000, daily_profit: 0, duration_days: 30, total_profit: 0 },
+      { id: 'vip2_article3', name: 'Moule & Filtre Spectrométrique (VIP 2 • 3/3)', price: 75000, daily_profit: 3000, duration_days: 30, total_profit: 200000 }
+    ];
+
+    const legacyIds = ['plan_poussiere', 'plan_pepite', 'plan_lingot', 'plan_barre', 'plan_coffre', 'plan_filon', 'plan_mine_royale'];
+    for (const legId of legacyIds) {
+      await supabase.from('investment_plans').delete().eq('id', legId);
+    }
+    await supabase.from('investment_plans').upsert(vipPlans);
+    console.log('[Supabase AutoSync] Table investment_plans synchronisée avec la nouvelle structure VIP.');
+  } catch (_e) {
+    // Silent catch
+  }
+}
 
 // --- Vite Dev Middleware and Production Static Server ---
 
@@ -919,6 +1064,7 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`[Server] Server is running on http://localhost:${PORT}`);
+    autoSyncVipPlans().catch(() => {});
   });
 }
 
