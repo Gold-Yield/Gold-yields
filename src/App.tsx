@@ -270,7 +270,18 @@ export default function App() {
     setUserName(user.name);
     setUserPhone(user.phone);
     setInviteCode(user.inviteCode);
-    setBalance(user.balance);
+
+    // Merge balance with local storage to prevent loss of collected rewards
+    const localBalanceStr = user.phone ? localStorage.getItem(`gy_${user.phone}_balance`) : null;
+    const localBalance = localBalanceStr ? parseFloat(localBalanceStr) : undefined;
+    const finalBalance = (localBalance !== undefined && !isNaN(localBalance))
+      ? Math.max(user.balance || 0, localBalance)
+      : (user.balance || 0);
+    setBalance(finalBalance);
+    if (user.phone) {
+      localStorage.setItem(`gy_${user.phone}_balance`, String(finalBalance));
+    }
+
     setSchemaCacheStale(isStale || false);
 
     // Merge with local storage values to prevent counter reset on reload
@@ -456,12 +467,18 @@ export default function App() {
     setBalance((prevBalance) => {
       const updatedBalance = prevBalance + reward;
       if (userPhone) {
+        localStorage.setItem(`gy_${userPhone}_balance`, String(updatedBalance));
         fetch('/api/user/sync-tick', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             phone: userPhone,
-            balance: updatedBalance
+            balance: updatedBalance,
+            tx: {
+              type: reward >= 0 ? 'collect' : 'investment',
+              amount: reward,
+              details: reward >= 0 ? `Récompense : ${taskTitle}` : `Achat Article : ${taskTitle}`
+            }
           }),
         }).catch(() => {});
       }

@@ -191,6 +191,17 @@ export function DashboardScreen({
     return false;
   });
 
+  // Keep VIP completion state in sync with localStorage and user phone
+  React.useEffect(() => {
+    if (userPhone) {
+      const saved1 = localStorage.getItem(`gy_${userPhone}_vip1_finished`);
+      if (saved1 === 'true') setIsVip1Finished(true);
+
+      const saved2 = localStorage.getItem(`gy_${userPhone}_vip2_finished`);
+      if (saved2 === 'true') setIsVip2Finished(true);
+    }
+  }, [userPhone]);
+
   // Saved VIP 1 Step ('article1' | 'article2')
   const [vip1SavedStep, setVip1SavedStep] = useState<'article1' | 'article2'>(() => {
     if (typeof window !== 'undefined' && userPhone) {
@@ -277,6 +288,10 @@ export function DashboardScreen({
   }, [vip2CommanderStep]);
 
   const handleStartVip1Commander = () => {
+    if (isVip1Finished) {
+      if (showToast) showToast("Le niveau VIP 1 est déjà terminé, validé et bloqué !", "info");
+      return;
+    }
     setVipLevelModal(null);
     if (vip1SavedStep === 'article2') {
       setVip1CommanderStep('article2');
@@ -286,6 +301,10 @@ export function DashboardScreen({
   };
 
   const handleStartVip2Commander = () => {
+    if (isVip2Finished) {
+      if (showToast) showToast("Le niveau VIP 2 est déjà terminé, validé et bloqué !", "info");
+      return;
+    }
     setVipLevelModal(null);
     if (vip2SavedStep === 'article3') {
       setVip2CommanderStep('article3');
@@ -336,6 +355,14 @@ export function DashboardScreen({
       if (userPhone) {
         localStorage.setItem(`gy_${userPhone}_vip1_finished`, 'true');
         localStorage.removeItem(`gy_${userPhone}_vip1_step`);
+        fetch('/api/user/sync-tick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: userPhone,
+            isVip1Finished: true
+          }),
+        }).catch(() => {});
       }
       setVip1CommanderStep('success');
     }, 250);
@@ -401,6 +428,14 @@ export function DashboardScreen({
       if (userPhone) {
         localStorage.setItem(`gy_${userPhone}_vip2_finished`, 'true');
         localStorage.removeItem(`gy_${userPhone}_vip2_step`);
+        fetch('/api/user/sync-tick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: userPhone,
+            isVip2Finished: true
+          }),
+        }).catch(() => {});
       }
       setVip2CommanderStep('success');
     }, 250);
@@ -1641,13 +1676,17 @@ NOTIFY pgrst, 'reload schema';`}
                   </p>
                 </div>
               ) : (
-                <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-2">
+                <div className={`border rounded-2xl p-4 space-y-2 ${isVip1Finished ? 'bg-emerald-950/80 border-emerald-500/50' : 'bg-slate-950/80 border-slate-800'}`}>
                   <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-xs">
                     <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400" />
-                    <span>Accès Automatique dès 2 300 FCFA</span>
+                    <span>{isVip1Finished ? 'VIP 1 Clôturé & Bloqué (Terminé)' : 'Accès Automatique dès 2 300 FCFA'}</span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    {isVip1Unlocked ? (
+                    {isVip1Finished ? (
+                      <span>
+                        Félicitations ! Vous avez accompli l'ensemble des commandes d'articles du <strong>VIP 1</strong> et empoché la récompense globale de <strong>17 000 FCFA</strong>. Ce niveau est désormais sauvegardé et définitivement bloqué.
+                      </span>
+                    ) : isVip1Unlocked ? (
                       <span>
                         Félicitations ! Avec votre solde actuel de <strong className="text-emerald-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong> (≥ 2 300 FCFA), le système vous donne accès au <strong>VIP 1</strong> ! Vous pouvez exécuter vos quêtes quotidiennes dès maintenant.
                       </span>
@@ -1675,6 +1714,13 @@ NOTIFY pgrst, 'reload schema';`}
                   </button>
                 )}
 
+                {vipLevelModal.isVip1 && isVip1Finished && (
+                  <div className="w-full py-3.5 bg-slate-900 border border-emerald-500/40 text-emerald-400 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 opacity-90 select-none cursor-not-allowed">
+                    <Lock className="w-4 h-4 text-emerald-400" />
+                    <span>Niveau VIP 1 Validé & Bloqué (Déjà Terminé)</span>
+                  </div>
+                )}
+
                 {vipLevelModal.isVip2 && isVip2Unlocked && !isVip2Finished && (
                   <button
                     onClick={handleStartVip2Commander}
@@ -1689,6 +1735,13 @@ NOTIFY pgrst, 'reload schema';`}
                         : 'Commander (Articles de mine VIP 2)'}
                     </span>
                   </button>
+                )}
+
+                {vipLevelModal.isVip2 && isVip2Finished && (
+                  <div className="w-full py-3.5 bg-slate-900 border border-emerald-500/40 text-emerald-400 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 opacity-90 select-none cursor-not-allowed">
+                    <Lock className="w-4 h-4 text-emerald-400" />
+                    <span>Niveau VIP 2 Validé & Bloqué (Déjà Terminé)</span>
+                  </div>
                 )}
 
                 <button
