@@ -203,7 +203,7 @@ app.post('/api/auth/login', async (req, res) => {
         phone: user.phone,
         name: user.name,
         inviteCode: user.invite_code || 'GOLDYIELD',
-        balance: user.balance !== undefined && user.balance !== null ? Number(user.balance) : 1000,
+        balance: user.balance !== undefined && user.balance !== null ? Number(user.balance) : 0,
         claimableSum: user.claimable_sum !== undefined && user.claimable_sum !== null ? Number(user.claimable_sum) : 0,
         lastTickTime: user.last_tick_time !== undefined && user.last_tick_time !== null ? Number(user.last_tick_time) : Date.now()
       },
@@ -297,7 +297,7 @@ app.get('/api/auth/profile', async (req, res) => {
         phone: user.phone,
         name: user.name,
         inviteCode: user.invite_code || 'GOLDYIELD',
-        balance: user.balance !== undefined && user.balance !== null ? Number(user.balance) : 1000,
+        balance: user.balance !== undefined && user.balance !== null ? Number(user.balance) : 0,
         claimableSum: user.claimable_sum !== undefined && user.claimable_sum !== null ? Number(user.claimable_sum) : 0,
         lastTickTime: user.last_tick_time !== undefined && user.last_tick_time !== null ? Number(user.last_tick_time) : Date.now()
       },

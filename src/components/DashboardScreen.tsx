@@ -1237,13 +1237,6 @@ NOTIFY pgrst, 'reload schema';`}
                   >
                     <span>Rejoindre le canal Telegram VIP 3</span>
                   </a>
-
-                  <button
-                    onClick={handleResetVipStatus}
-                    className="py-3 px-4 bg-slate-950 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 transition-all cursor-pointer"
-                  >
-                    Réinitialiser les VIP
-                  </button>
                 </div>
               </div>
             )}
@@ -1717,17 +1710,6 @@ NOTIFY pgrst, 'reload schema';`}
                   <ChevronRight className="w-4 h-4" />
                 </button>
 
-                {(isVip1Finished || isVip2Finished) && (
-                  <button
-                    onClick={() => {
-                      handleResetVipStatus();
-                      setVipLevelModal(null);
-                    }}
-                    className="w-full py-2 bg-slate-950 hover:bg-slate-900 text-amber-400 font-extrabold text-[11px] rounded-xl border border-amber-500/30 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <span>🔄 Réinitialiser les VIP 1 & VIP 2 pour réessayer</span>
-                  </button>
-                )}
 
                 <button
                   onClick={() => setVipLevelModal(null)}

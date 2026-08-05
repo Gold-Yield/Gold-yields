@@ -266,7 +266,7 @@ export default function App() {
   }, [isLoggedIn]);
 
   // Auth Success action handler (from database)
-  const handleLoginSuccess = (user: any, investmentsList: any[], transactionsList: any[], isStale?: boolean) => {
+  const handleLoginSuccess = (user: any, investmentsList: any[], transactionsList: any[], isStale?: boolean, isNewUser?: boolean) => {
     setUserName(user.name);
     setUserPhone(user.phone);
     setInviteCode(user.inviteCode);
@@ -304,12 +304,13 @@ export default function App() {
     setActiveInvestments(activePlans);
     setTransactions(transactionsList || []);
 
-    // Check if new user for welcome modal trigger
+    // Check if new user for welcome modal trigger (only show bonus popup strictly on NEW registration)
     const welcomeSeen = localStorage.getItem(`gy_${user.phone}_welcome_seen`);
-    if (!welcomeSeen) {
+    if (isNewUser && !welcomeSeen) {
       localStorage.setItem(`gy_${user.phone}_welcome_seen`, 'true');
       setIsBonusOpen(true);
     } else {
+      localStorage.setItem(`gy_${user.phone}_welcome_seen`, 'true');
       setIsBonusOpen(false);
     }
 
