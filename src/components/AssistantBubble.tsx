@@ -8,20 +8,24 @@ export function AssistantBubble() {
 
   const faqs = [
     {
-      q: "Comment puis-je investir ?",
-      a: "Choisissez un plan dans l'onglet 'Plans d'investissement' (à partir de 3 000 FCFA), cliquez sur 'Acheter' et suivez les instructions de recharge."
+      q: "Comment fonctionne l'emploi en ligne Gold Yield ?",
+      a: "Gold Yield offre un emploi accessible depuis votre téléphone. Vous validez des commandes de raffinage et effectuez vos missions quotidiennes pour percevoir des revenus réguliers allant de 35 000 FCFA à 65 000 FCFA par jour."
+    },
+    {
+      q: "Quels sont les gains et salaires quotidiens ?",
+      a: "Dès l'inscription, vous recevez un bonus offert de 500 FCFA. Le VIP 1 rapporte 1 000 FCFA/jour (+17 000 F de prime). Le VIP 2 rapporte 3 000 FCFA/jour (+200 000 F de prime). En VIP 3 (niveau officiel), vous percevez votre salaire quotidien de 35 000 FCFA à 65 000 FCFA par jour !"
+    },
+    {
+      q: "Quelles sont les règles de retrait pour le VIP 1 et VIP 2 ?",
+      a: "En VIP 1, votre carte vous donne droit à 1 retrait de 1 000 FCFA. Après épuisement de cette carte, vous devez obligatoirement terminer l'ensemble des commandes et étapes du VIP 2 pour débloquer de nouveaux retraits (vous aurez alors droit à 2 retraits de 3 000 FCFA en VIP 2)."
     },
     {
       q: "Quels sont les moyens de retrait ?",
-      a: "Nous prenons en charge les retraits instantanés par Orange Money, MTN MoMo et Wave."
+      a: "Vos salaires et primes peuvent être retirés par Mobile Money : Orange Money, MTN MoMo, Wave et Moov Money."
     },
     {
-      q: "Combien puis-je gagner avec le parrainage ?",
-      a: "Vous gagnez 10% de commission instantanée sur chaque recharge de vos parrainés. De plus, votre filleul reçoit un bonus de bienvenue de 500 FCFA."
-    },
-    {
-      q: "Quand puis-je retirer mes gains ?",
-      a: "Vos bénéfices de minage et vos récompenses de validation VIP sont automatiquement ajoutés à votre solde. Vous pouvez demander un retrait dès le seuil minimal atteint."
+      q: "Combien puis-je gagner avec le parrainage d'équipe ?",
+      a: "Vous touchez 10% de commission instantanée sur chaque membre de votre équipe. Chaque nouveau membre reçoit également son bonus de bienvenue de 500 FCFA."
     }
   ];
 
@@ -69,13 +73,13 @@ export function AssistantBubble() {
                   {/* Greeting Box */}
                   <div className="bg-slate-950/50 border border-slate-800 p-3.5 rounded-2xl text-xs text-slate-300 space-y-2">
                     <p>
-                      👋 Bonjour ! Je suis votre conseillère virtuelle <strong>Gold Yield</strong>.
+                      👋 Bonjour ! Je suis votre conseillère <strong>Gold Yield</strong>.
                     </p>
                     <p>
-                      Notre plateforme vous permet de participer au raffinage d'or physique certifié et d'obtenir des rendements journaliers stables et sécurisés.
+                      Rejoignez notre équipe d'emploi en ligne ! Exécutez vos missions de gestion minière quotidiennes directement sur votre téléphone et touchez entre <strong>35 000 FCFA et 65 000 FCFA par jour</strong> avec des retraits immédiats !
                     </p>
                     <p className="font-semibold text-gold-400">
-                      Comment puis-je vous guider aujourd'hui ?
+                      Comment puis-je vous accompagner aujourd'hui ?
                     </p>
                   </div>
 
@@ -153,8 +157,8 @@ export function AssistantBubble() {
                         1
                       </div>
                       <div className="space-y-0.5">
-                        <h6 className="text-xs font-bold text-white">Rechargez votre compte</h6>
-                        <p className="text-[11px] text-slate-400">Créditez votre portefeuille via Orange, MTN ou Wave dans la section Recharge.</p>
+                        <h6 className="text-xs font-bold text-white">Inscrivez-vous &amp; Touchez 500 FCFA</h6>
+                        <p className="text-[11px] text-slate-400">Créez votre compte gratuitement et recevez immédiatement votre bonus d'embauche de 500 FCFA offert.</p>
                       </div>
                     </div>
 
@@ -163,8 +167,8 @@ export function AssistantBubble() {
                         2
                       </div>
                       <div className="space-y-0.5">
-                        <h6 className="text-xs font-bold text-white">Sélectionnez un plan de raffinage</h6>
-                        <p className="text-[11px] text-slate-400">Choisissez le plan adapté à votre budget pour lancer vos machines de raffinage.</p>
+                        <h6 className="text-xs font-bold text-white">Validez vos missions (35k - 65k F/jour)</h6>
+                        <p className="text-[11px] text-slate-400">Validez les commandes de gestion minière pour accumuler vos rémunérations journalières.</p>
                       </div>
                     </div>
 
@@ -173,8 +177,8 @@ export function AssistantBubble() {
                         3
                       </div>
                       <div className="space-y-0.5">
-                        <h6 className="text-xs font-bold text-white">Récupérez et retirez vos gains</h6>
-                        <p className="text-[11px] text-slate-400">Collectez vos bénéfices accumulés chaque seconde et retirez-les instantanément.</p>
+                        <h6 className="text-xs font-bold text-white">Retirez vos salaires chaque jour</h6>
+                        <p className="text-[11px] text-slate-400">Retirez directement votre argent sur votre compte Wave, Orange, MTN ou Moov Money.</p>
                       </div>
                     </div>
                   </div>

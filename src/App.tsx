@@ -14,6 +14,7 @@ import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { LiveNotification } from './components/LiveNotification';
 import { AssistantBubble } from './components/AssistantBubble';
+import { TutorialOverlay } from './components/TutorialOverlay';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { InvestmentPlan, ActiveInvestment, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
@@ -71,6 +72,10 @@ export default function App() {
   const [claimableSum, setClaimableSum] = useState<number>(0);
   const [lastTickTime, setLastTickTime] = useState<number>(Date.now());
 
+  useEffect(() => {
+    document.body.className = 'bg-slate-950 text-slate-100 select-none';
+  }, []);
+
   // Elegant Custom Toast State
   const [toast, setToast] = useState<{
     show: boolean;
@@ -117,6 +122,7 @@ export default function App() {
   // UI helpers
   const [selectedPlan, setSelectedPlan] = useState<InvestmentPlan | null>(null);
   const [isBonusOpen, setIsBonusOpen] = useState<boolean>(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState<boolean>(false);
 
   // 1. Initial hydration from database (with local storage as fallback)
   useEffect(() => {
@@ -567,7 +573,12 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* Conditionally render header top bar when user is logged in */}
       {isLoggedIn && screen !== 'auth' && (
-        <TopBar userName={userName} userPhone={userPhone} onLogout={handleLogout} />
+        <TopBar
+          userName={userName}
+          userPhone={userPhone}
+          onLogout={handleLogout}
+          onOpenTutorial={() => setIsTutorialOpen(true)}
+        />
       )}
 
       {/* Primary Screen router */}
@@ -601,6 +612,7 @@ export default function App() {
             activeTab={dashboardTab}
             onTabChange={(tab) => setDashboardTab(tab)}
             showToast={showToast}
+            onOpenTutorial={() => setIsTutorialOpen(true)}
           />
         )}
 
@@ -654,6 +666,16 @@ export default function App() {
 
       {/* Interactive Registration Welcome Bonus popup */}
       <BonusModal isOpen={isBonusOpen} onClose={() => setIsBonusOpen(false)} />
+
+      {/* Interactive New User Tutorial Overlay */}
+      <TutorialOverlay
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        onNavigateTab={(tab) => {
+          setDashboardTab(tab);
+          setScreen('dashboard');
+        }}
+      />
 
       {/* Custom Premium Toast Notification */}
       <AnimatePresence>

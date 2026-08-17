@@ -54,19 +54,24 @@ export function WithdrawScreen({
   } | null>(null);
   const [copiedProof, setCopiedProof] = useState(false);
 
-  // Check if user already made a withdrawal today
-  const todayStr = new Date().toDateString();
+  // Check user withdrawal counts for VIP 1 and VIP 2
   const txListToUse = transactions.length > 0
     ? transactions
     : phone && typeof window !== 'undefined'
     ? JSON.parse(localStorage.getItem(`gy_${phone}_transactions`) || '[]')
     : [];
 
-  const hasWithdrawnToday = txListToUse.some((tx: Transaction) => {
-    if (tx.type !== 'withdrawal') return false;
-    const txDate = new Date(tx.date).toDateString();
-    return txDate === todayStr;
-  });
+  const vip1WithdrawalsCount = txListToUse.filter((tx: Transaction) =>
+    tx.type === 'withdrawal' && (!tx.details || !tx.details.includes('VIP 2'))
+  ).length;
+
+  const vip2WithdrawalsCount = txListToUse.filter((tx: Transaction) =>
+    tx.type === 'withdrawal' && tx.details && tx.details.includes('VIP 2')
+  ).length;
+
+  const isVip1QuotaReached = !isVip2 && vip1WithdrawalsCount >= 1;
+  const isVip2QuotaReached = isVip2 && vip2WithdrawalsCount >= 2;
+  const isQuotaReached = isVip1QuotaReached || isVip2QuotaReached;
 
   // Live calculation of 10% fee and Net amount
   useEffect(() => {
@@ -94,8 +99,13 @@ export function WithdrawScreen({
   const handleWithdraw = () => {
     setError(null);
 
-    if (hasWithdrawnToday) {
-      setError("❌ Vous avez déjà effectué votre retrait aujourd'hui. La limite est de 1 retrait par jour.");
+    if (isVip1QuotaReached) {
+      setError("❌ Retrait refusé : Après épuisement de votre carte VIP 1 (1 000 FCFA déjà retiré), vous devez obligatoirement terminer l'ensemble des étapes et commandes du VIP 2 pour débloquer vos prochains retraits !");
+      return;
+    }
+
+    if (isVip2QuotaReached) {
+      setError("❌ Limite atteinte : Vous avez déjà effectué vos 2 retraits autorisés en VIP 2 (3 000 FCFA chacun). Félicitations pour votre parcours !");
       return;
     }
 
@@ -107,7 +117,7 @@ export function WithdrawScreen({
     }
 
     if (parsedAmount > maxDailyLimit) {
-      setError(`❌ En ${vipLevelName}, le montant maximal autorisé pour un retrait est de ${maxDailyLimit.toLocaleString('fr-FR')} FCFA par jour.`);
+      setError(`❌ En ${vipLevelName}, le montant maximal autorisé pour un retrait est de ${maxDailyLimit.toLocaleString('fr-FR')} FCFA par opération.`);
       return;
     }
 
@@ -179,32 +189,69 @@ export function WithdrawScreen({
         {/* Content */}
         <div className="p-6 md:p-8 space-y-6">
           {/* VIP Level & Quota Status Badge */}
-          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between shadow-lg">
+          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400">
                 <Crown className="w-5 h-5" />
               </div>
               <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-black text-amber-400 uppercase tracking-wider">
                     Statut Actuel : {vipLevelName}
                   </span>
-                  {hasWithdrawnToday ? (
-                    <span className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> Retrait du jour effectué
-                    </span>
+                  {!isVip2 ? (
+                    vip1WithdrawalsCount >= 1 ? (
+                      <span className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> Quota VIP 1 atteint (1/1)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> 1 Retrait VIP 1 disponible
+                      </span>
+                    )
                   ) : (
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> 1 Retrait disponible
-                    </span>
+                    vip2WithdrawalsCount >= 2 ? (
+                      <span className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> Quota VIP 2 atteint (2/2)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> {2 - vip2WithdrawalsCount} Retrait(s) VIP 2 restant(s) (sur 2)
+                      </span>
+                    )
                   )}
                 </div>
                 <p className="text-xs text-slate-300 font-medium">
-                  Limite quotidienne : <strong className="text-amber-300 font-mono font-bold">{maxDailyLimit.toLocaleString('fr-FR')} FCFA</strong> / jour (1 retrait)
+                  Montant max : <strong className="text-amber-300 font-mono font-bold">{maxDailyLimit.toLocaleString('fr-FR')} FCFA</strong> / opération {!isVip2 ? '(1 seul retrait en VIP 1)' : '(2 retraits au total en VIP 2)'}
                 </p>
               </div>
             </div>
           </div>
+
+          {/* Quota Exhausted Alert Box if applicable */}
+          {isVip1QuotaReached && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 space-y-1.5 text-xs text-amber-200">
+              <div className="font-bold flex items-center gap-2 text-amber-400">
+                <AlertCircle className="w-4 h-4" />
+                <span>Information : Épuisement de votre carte VIP 1</span>
+              </div>
+              <p className="text-slate-300 leading-relaxed">
+                Vous avez déjà utilisé votre <strong>unique retrait autorisé sur votre carte VIP 1 (1 000 FCFA)</strong>. Après épuisement de cette carte, vous devez <strong>obligatoirement terminer l'ensemble des commandes et étapes du VIP 2</strong> pour débloquer vos prochains retraits (vous bénéficierez alors de <strong>2 retraits autorisés de 3 000 FCFA en VIP 2</strong>) !
+              </p>
+            </div>
+          )}
+
+          {isVip2QuotaReached && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4 space-y-1.5 text-xs text-blue-200">
+              <div className="font-bold flex items-center gap-2 text-blue-400">
+                <Award className="w-4 h-4" />
+                <span>Quota VIP 2 atteint</span>
+              </div>
+              <p className="text-slate-300 leading-relaxed">
+                Vous avez déjà effectué vos <strong>2 retraits autorisés en VIP 2</strong> (3 000 FCFA chacun). Félicitations pour votre progression dans l'équipe Gold Yield !
+              </p>
+            </div>
+          )}
 
           {/* Solde d'affichage */}
           <div className="bg-gradient-to-br from-amber-900/20 to-slate-950 border border-slate-800 rounded-2xl p-5 flex items-center justify-between">
@@ -299,13 +346,13 @@ export function WithdrawScreen({
           {/* Guidelines info box */}
           <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 space-y-2.5 text-xs text-slate-400">
             <span className="text-amber-500 font-semibold flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
-              <AlertCircle className="w-3.5 h-3.5" /> Conditions d'exécution des retraits par VIP
+              <AlertCircle className="w-3.5 h-3.5" /> Règles & Quotas des Retraits
             </span>
-            <ul className="list-disc pl-4 space-y-1">
-              <li><strong className="text-amber-400">VIP 1 :</strong> 1 retrait par jour d'un montant de <strong className="text-white">1 000 FCFA</strong>.</li>
-              <li><strong className="text-amber-400">VIP 2 :</strong> 1 retrait par jour d'un montant de <strong className="text-white">3 000 FCFA</strong>.</li>
-              <li>Des frais de service de <strong className="text-white">10%</strong> sont appliqués sur chaque retrait.</li>
-              <li><strong className="text-emerald-400">Note :</strong> Le solde n'est pas déduit automatiquement lors de la demande. Le solde sera ajusté par l'administrateur sur Supabase lors du traitement.</li>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li><strong className="text-amber-400">VIP 1 :</strong> Carte de retrait autorisée pour <strong className="text-white">1 seul retrait</strong> de <strong className="text-white">1 000 FCFA</strong>. <strong className="text-amber-300">Après épuisement de cette carte</strong>, vous devez <strong className="text-white">obligatoirement terminer le VIP 2</strong> pour débloquer les retraits suivants.</li>
+              <li><strong className="text-amber-400">VIP 2 :</strong> Autorisation de <strong className="text-white">2 retraits</strong> d'un montant de <strong className="text-white">3 000 FCFA</strong> chacun.</li>
+              <li>Des frais de traitement de <strong className="text-white">10%</strong> sont appliqués sur chaque retrait.</li>
+              <li><strong className="text-emerald-400">Note :</strong> Le solde est ajusté et vérifié par l'administrateur lors de la validation finale du paiement.</li>
             </ul>
           </div>
 

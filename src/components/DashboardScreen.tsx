@@ -78,6 +78,7 @@ interface DashboardScreenProps {
   activeTab?: DashboardTab;
   onTabChange?: (tab: DashboardTab) => void;
   showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+  onOpenTutorial?: () => void;
 }
 
 const DAILY_TASKS: DailyTask[] = [
@@ -144,7 +145,8 @@ export function DashboardScreen({
   onLogout,
   activeTab = 'home',
   onTabChange,
-  showToast
+  showToast,
+  onOpenTutorial
 }: DashboardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
@@ -527,14 +529,19 @@ export function DashboardScreen({
   };
 
   const handleCopyLink = () => {
-    const textToCopy = `🌟 *Rejoignez Gold Yield et commencez à générer des revenus !* 🌟\n\n` +
-                       `Investissez dans le raffinage d'or certifié et gagnez des gains passifs quotidiens en toute sécurité ! 📈💰\n\n` +
-                       `🎁 *CADEAU DE BIENVENUE :* Recevez immédiatement un bonus de *500 FCFA* à l'inscription en passant par mon lien !\n\n` +
-                       `👉 Inscrivez-vous gratuitement dès maintenant : \n` +
+    const textToCopy = `📢 *OPPORTUNITÉ D'EMPLOI EN LIGNE — GOLD YIELD* 💼\n\n` +
+                       `Rejoignez notre équipe et travaillez directement depuis votre téléphone pour percevoir un salaire quotidien compris entre *35 000 FCFA et 65 000 FCFA par jour* !\n\n` +
+                       `💰 *RÉMUNÉRATION & GAINS QUOTIDIENS :*\n` +
+                       `💵 *Gains quotidiens :* De 35 000 FCFA à 65 000 FCFA par jour !\n` +
+                       `🎁 *Bonus de Bienvenue :* 500 FCFA offerts gratuitement dès votre inscription !\n` +
+                       `🔹 *Missions quotidiennes :* Exécutez des commandes simples et retirez votre argent tous les jours.\n\n` +
+                       `💸 *Retraits Instantanés :* Recevez vos revenus directement sur votre compte Mobile Money (Wave, Orange, MTN, Moov) !\n\n` +
+                       `👉 *Inscrivez-vous gratuitement et commencez à travailler dès aujourd'hui :*\n` +
                        `${inviteLink}\n\n` +
-                       `🚀 Retraits rapides, rendements certifiés et support 24h/24. Rejoignez notre communauté d'investisseurs ! 👑`;
+                       `🚀 Prenez votre autonomie financière en main avec Gold Yield !`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
+    if (showToast) showToast('Lien et offre d\'emploi (35 000 - 65 000 FCFA/jour) copiés !', 'success');
     setTimeout(() => setCopied(false), 3000);
   };
 
@@ -833,8 +840,20 @@ NOTIFY pgrst, 'reload schema';`}
                   </h2>
                 </div>
                 
-                <div className="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800">
-                  <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+                <div className="flex items-center gap-2">
+                  {onOpenTutorial && (
+                    <button
+                      onClick={onOpenTutorial}
+                      className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shadow-amber-500/10 cursor-pointer"
+                      title="Lancer le tutoriel interactif"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Guide & Tuto</span>
+                    </button>
+                  )}
+                  <div className="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800">
+                    <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+                  </div>
                 </div>
               </div>
 

@@ -5,15 +5,16 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Coins, LogOut, User, Shield } from 'lucide-react';
+import { Coins, LogOut, User, HelpCircle } from 'lucide-react';
 
 interface TopBarProps {
   userName: string;
   userPhone: string;
   onLogout: () => void;
+  onOpenTutorial?: () => void;
 }
 
-export function TopBar({ userName, userPhone, onLogout }: TopBarProps) {
+export function TopBar({ userName, userPhone, onLogout, onOpenTutorial }: TopBarProps) {
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3 md:px-8">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -34,8 +35,21 @@ export function TopBar({ userName, userPhone, onLogout }: TopBarProps) {
           </div>
         </div>
 
-        {/* User Card & Log Out */}
-        <div className="flex items-center gap-4">
+        {/* User Card, Tutorial & Log Out */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {onOpenTutorial && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onOpenTutorial}
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-amber-500/10"
+              title="Guide & Tutoriel"
+            >
+              <HelpCircle className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Guide</span>
+            </motion.button>
+          )}
+
           <div className="hidden sm:flex items-center gap-3 text-right">
             <div>
               <p className="text-xs font-semibold text-white leading-none mb-0.5">{userName}</p>

@@ -637,30 +637,38 @@ app.post('/api/user/withdraw', async (req, res) => {
   const numAmount = Number(amount);
 
   try {
-    // 1. Check if user already made a withdrawal today in database
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const { data: todayWithdrawals } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_phone', phone)
-      .eq('type', 'withdrawal')
-      .gte('created_at', todayStart.toISOString());
-
-    if (todayWithdrawals && todayWithdrawals.length > 0) {
-      return res.status(400).json({
-        error: "Vous avez déjà effectué votre retrait quotidien. La limite est de 1 retrait par jour."
-      });
-    }
-
-    // 2. VIP level daily amount check
+    // 1. Check VIP withdrawal quotas and total withdrawal count
     const isVip2 = vipLevel === 'VIP 2' || vipLevel === 'vip2';
     const maxLimit = isVip2 ? 3000 : 1000;
 
+    const { data: userWithdrawals } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_phone', phone)
+      .eq('type', 'withdrawal');
+
+    const allWithdrawalsList = userWithdrawals || [];
+    const vip1Withdrawals = allWithdrawalsList.filter((tx: any) => !tx.details || !tx.details.includes('VIP 2'));
+    const vip2Withdrawals = allWithdrawalsList.filter((tx: any) => tx.details && tx.details.includes('VIP 2'));
+
+    if (!isVip2) {
+      if (vip1Withdrawals.length >= 1) {
+        return res.status(400).json({
+          error: "Retrait refusé : Après épuisement de votre carte de retrait VIP 1 (1 retrait de 1 000 FCFA déjà effectué), vous devez obligatoirement terminer l'ensemble des étapes et commandes du VIP 2 pour débloquer vos prochains retraits !"
+        });
+      }
+    } else {
+      if (vip2Withdrawals.length >= 2) {
+        return res.status(400).json({
+          error: "Vous avez déjà effectué vos 2 retraits autorisés en VIP 2 (3 000 FCFA chacun). Félicitations pour votre parcours !"
+        });
+      }
+    }
+
+    // 2. Daily amount validation
     if (numAmount > maxLimit) {
       return res.status(400).json({
-        error: `En ${isVip2 ? 'VIP 2' : 'VIP 1'}, le montant maximal de retrait est de ${maxLimit.toLocaleString('fr-FR')} FCFA par jour.`
+        error: `En ${isVip2 ? 'VIP 2' : 'VIP 1'}, le montant maximal de retrait est de ${maxLimit.toLocaleString('fr-FR')} FCFA par opération.`
       });
     }
 
