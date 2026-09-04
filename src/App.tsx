@@ -15,6 +15,7 @@ import { Footer } from './components/Footer';
 import { LiveNotification } from './components/LiveNotification';
 import { AssistantBubble } from './components/AssistantBubble';
 import { TutorialOverlay } from './components/TutorialOverlay';
+import { ThemeSelectorModal } from './components/ThemeSelectorModal';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { InvestmentPlan, ActiveInvestment, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
@@ -72,9 +73,28 @@ export default function App() {
   const [claimableSum, setClaimableSum] = useState<number>(0);
   const [lastTickTime, setLastTickTime] = useState<number>(Date.now());
 
+  // Visual Theme Customization: 'royal' | 'emerald' | 'obsidian' | 'light'
+  const [currentTheme, setCurrentTheme] = useState<'royal' | 'emerald' | 'obsidian' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('gy_app_theme');
+      if (saved === 'royal' || saved === 'emerald' || saved === 'obsidian' || saved === 'light') {
+        return saved;
+      }
+    }
+    return 'royal';
+  });
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+
+  const handleSelectTheme = (newTheme: 'royal' | 'emerald' | 'obsidian' | 'light') => {
+    setCurrentTheme(newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gy_app_theme', newTheme);
+    }
+  };
+
   useEffect(() => {
-    document.body.className = 'bg-slate-950 text-slate-100 select-none';
-  }, []);
+    document.body.className = `theme-${currentTheme} text-slate-100 select-none`;
+  }, [currentTheme]);
 
   // Elegant Custom Toast State
   const [toast, setToast] = useState<{
@@ -570,7 +590,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className={`min-h-screen theme-${currentTheme} text-slate-100 flex flex-col transition-colors duration-300`}>
       {/* Conditionally render header top bar when user is logged in */}
       {isLoggedIn && screen !== 'auth' && (
         <TopBar
@@ -578,6 +598,8 @@ export default function App() {
           userPhone={userPhone}
           onLogout={handleLogout}
           onOpenTutorial={() => setIsTutorialOpen(true)}
+          onOpenThemeSelector={() => setIsThemeModalOpen(true)}
+          currentTheme={currentTheme}
         />
       )}
 
@@ -613,6 +635,8 @@ export default function App() {
             onTabChange={(tab) => setDashboardTab(tab)}
             showToast={showToast}
             onOpenTutorial={() => setIsTutorialOpen(true)}
+            onOpenThemeSelector={() => setIsThemeModalOpen(true)}
+            currentTheme={currentTheme}
           />
         )}
 
@@ -675,6 +699,14 @@ export default function App() {
           setDashboardTab(tab);
           setScreen('dashboard');
         }}
+      />
+
+      {/* Visual Theme and Palette Customizer Modal */}
+      <ThemeSelectorModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        currentTheme={currentTheme}
+        onSelectTheme={handleSelectTheme}
       />
 
       {/* Custom Premium Toast Notification */}

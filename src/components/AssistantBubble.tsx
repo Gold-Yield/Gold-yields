@@ -13,7 +13,7 @@ export function AssistantBubble() {
     },
     {
       q: "Quels sont les gains et salaires quotidiens ?",
-      a: "Dès l'inscription, vous recevez un bonus offert de 500 FCFA. Le VIP 1 rapporte 1 000 FCFA/jour (+17 000 F de prime). Le VIP 2 rapporte 3 000 FCFA/jour (+200 000 F de prime). En VIP 3 (niveau officiel), vous percevez votre salaire quotidien de 35 000 FCFA à 65 000 FCFA par jour !"
+      a: "Dès l'inscription, vous recevez un bonus de 500 FCFA offert. Le VIP 1 (dès 3 500 F) rapporte un gain total garanti de 100 000 FCFA (2 commandes : 700 F et 800 F) avec 1 retrait test de 1 000 F. Le VIP 2 (dès 10 000 F) débloque un gain total garanti de 500 000 FCFA (3 commandes : 25 000 F, 50 000 F, 75 000 F) avec 2 retraits de 3 000 F. En VIP 3 (statut société officiel), vous percevez votre salaire quotidien de 35 000 FCFA à 65 000 FCFA par jour !"
     },
     {
       q: "Quelles sont les règles de retrait pour le VIP 1 et VIP 2 ?",
@@ -167,8 +167,8 @@ export function AssistantBubble() {
                         2
                       </div>
                       <div className="space-y-0.5">
-                        <h6 className="text-xs font-bold text-white">Validez vos missions (35k - 65k F/jour)</h6>
-                        <p className="text-[11px] text-slate-400">Validez les commandes de gestion minière pour accumuler vos rémunérations journalières.</p>
+                        <h6 className="text-xs font-bold text-white">Adhésion VIP 1 (+100k F) &amp; VIP 2 (+500k F)</h6>
+                        <p className="text-[11px] text-slate-400">Validez les commandes de mine pour empocher vos gains garantis et accéder au salaire VIP 3 (35k - 65k F/jour).</p>
                       </div>
                     </div>
 

@@ -14,7 +14,7 @@ interface RechargeScreenProps {
   onAddTransaction: (amount: number) => void;
 }
 
-const PRESETS = [1800, 7800, 50000, 75000];
+const PRESETS = [3500, 10000, 25000, 50000, 75000];
 
 const PAYMENT_METHODS = [
   { id: 'wave', name: "Wave Côte d'Ivoire", color: 'from-sky-500 to-blue-600', badge: 'Payement Direct Wave', icon: '🌊' },
@@ -22,7 +22,7 @@ const PAYMENT_METHODS = [
 ];
 
 export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: RechargeScreenProps) {
-  const [amount, setAmount] = useState<string>('1800');
+  const [amount, setAmount] = useState<string>('3500');
   const [selectedMethod, setSelectedMethod] = useState<string>('wave');
   const [unavailableMethod, setUnavailableMethod] = useState<string | null>(null);
   const [showWaveModal, setShowWaveModal] = useState<boolean>(false);
@@ -359,7 +359,7 @@ export function RechargeScreen({ currentBalance, onBack, onAddTransaction }: Rec
                   <input
                     type="number"
                     id="input-montant-recharge"
-                    placeholder="Ex: 1800"
+                    placeholder="Ex: 3500"
                     value={amount}
                     onChange={handleInputChange}
                     className="w-full pl-4 pr-16 py-3.5 bg-slate-950/80 border border-slate-800 focus:border-gold-500/50 rounded-xl text-lg font-bold font-mono text-white placeholder:text-slate-600 outline-none transition-all"

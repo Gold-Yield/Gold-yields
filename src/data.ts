@@ -5,6 +5,11 @@
 
 import { InvestmentPlan } from './types';
 
+import imgDetectorKit from './assets/images/detector_kit_1785752868739.jpg';
+import imgHydraulicCrusher from './assets/images/hydraulic_crusher_1785752893683.jpg';
+import imgCrucibleChiller from './assets/images/crucible_chiller_1785752905374.jpg';
+import imgGoldIngotFilter from './assets/images/gold_ingot_filter_1785752917779.jpg';
+
 export const DEFAULT_PLANS: InvestmentPlan[] = [
   {
     id: 'vip1_machine',
@@ -12,8 +17,9 @@ export const DEFAULT_PLANS: InvestmentPlan[] = [
     price: 1800,
     dailyProfit: 1000,
     durationDays: 30,
-    totalProfit: 30000,
+    totalProfit: 100000,
     iconName: 'Sparkles',
+    imageUrl: imgDetectorKit,
     colorScheme: {
       from: 'from-amber-950/40',
       to: 'to-amber-900/30',
@@ -29,6 +35,7 @@ export const DEFAULT_PLANS: InvestmentPlan[] = [
     durationDays: 30,
     totalProfit: 0,
     iconName: 'Coins',
+    imageUrl: imgHydraulicCrusher,
     colorScheme: {
       from: 'from-emerald-950/40',
       to: 'to-emerald-900/30',
@@ -44,6 +51,7 @@ export const DEFAULT_PLANS: InvestmentPlan[] = [
     durationDays: 30,
     totalProfit: 0,
     iconName: 'Vault',
+    imageUrl: imgCrucibleChiller,
     colorScheme: {
       from: 'from-yellow-900/45',
       to: 'to-amber-800/30',
@@ -57,8 +65,9 @@ export const DEFAULT_PLANS: InvestmentPlan[] = [
     price: 75000,
     dailyProfit: 3000,
     durationDays: 30,
-    totalProfit: 200000,
+    totalProfit: 500000,
     iconName: 'Crown',
+    imageUrl: imgGoldIngotFilter,
     colorScheme: {
       from: 'from-yellow-600/60',
       to: 'to-amber-700/50',

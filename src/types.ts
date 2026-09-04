@@ -11,6 +11,7 @@ export interface InvestmentPlan {
   durationDays: number;
   totalProfit: number;
   iconName: string; // Name of the lucide-react icon to render
+  imageUrl?: string;
   colorScheme: {
     from: string;
     to: string;

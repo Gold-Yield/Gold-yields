@@ -42,12 +42,14 @@ import {
   Loader2,
   X,
   Download,
-  Share
+  Share,
+  Palette
 } from 'lucide-react';
 import { InvestmentPlan, ActiveInvestment, Transaction, DailyTask } from '../types';
 import { DEFAULT_PLANS } from '../data';
 import { PlanIcon } from './PlanIcon';
 import { ReceiptModal } from './ReceiptModal';
+import { RefineryHeroBanner } from './RefineryHeroBanner';
 
 import imgRefinery from '../assets/images/gold_refinery_1783873491748.jpg';
 import imgMinePit from '../assets/images/gold_mine_pit_1783873507482.jpg';
@@ -58,6 +60,10 @@ import imgSpectrometerProbe from '../assets/images/spectrometer_probe_1785752880
 import imgHydraulicCrusher from '../assets/images/hydraulic_crusher_1785752893683.jpg';
 import imgCrucibleChiller from '../assets/images/crucible_chiller_1785752905374.jpg';
 import imgGoldIngotFilter from '../assets/images/gold_ingot_filter_1785752917779.jpg';
+
+import imgGoldRefineryHero from '../assets/images/gold_refinery_hero_1788513421267.jpg';
+import imgGoldVaultBars from '../assets/images/gold_vault_bars_1788513437955.jpg';
+import imgGoldMiningRig from '../assets/images/gold_mining_rig_1788513458483.jpg';
 
 export type DashboardTab = 'home' | 'plans' | 'tasks' | 'assets' | 'profile';
 
@@ -79,24 +85,26 @@ interface DashboardScreenProps {
   onTabChange?: (tab: DashboardTab) => void;
   showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
   onOpenTutorial?: () => void;
+  onOpenThemeSelector?: () => void;
+  currentTheme?: string;
 }
 
 const DAILY_TASKS: DailyTask[] = [
   {
     id: 'task_refinery_1',
     title: "Inspection du Raffinage Quotidien (VIP 1)",
-    description: "Contrôlez et validez la pesée du lot d'or brut. Requis : Solde de 500 FCFA pour débloquer le VIP 1.",
+    description: "Contrôlez et validez la pesée du lot d'or brut. Requis : Débloquer le VIP 1 (3 500 FCFA).",
     reward: 150,
-    minPriceRequired: 500,
+    minPriceRequired: 3500,
     category: 'beginner',
     iconName: 'CheckCircle',
   },
   {
     id: 'task_audit_2',
     title: "Audit du Registre des Lingots (VIP 1)",
-    description: "Vérifiez la numérotation des scellés de sécurité. Requis : Solde de 500 FCFA pour débloquer le VIP 1.",
+    description: "Vérifiez la numérotation des scellés de sécurité. Requis : Débloquer le VIP 1 (3 500 FCFA).",
     reward: 250,
-    minPriceRequired: 500,
+    minPriceRequired: 3500,
     category: 'beginner',
     iconName: 'ShieldCheck',
   },
@@ -146,7 +154,9 @@ export function DashboardScreen({
   activeTab = 'home',
   onTabChange,
   showToast,
-  onOpenTutorial
+  onOpenTutorial,
+  onOpenThemeSelector,
+  currentTheme = 'royal'
 }: DashboardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
@@ -294,6 +304,15 @@ export function DashboardScreen({
       if (showToast) showToast("Le niveau VIP 1 est déjà terminé, validé et bloqué !", "info");
       return;
     }
+    if (balance < 3500) {
+      setVipLevelModal(null);
+      setInsufficientBalanceModal({
+        requiredPrice: 3500,
+        missingAmount: 3500 - balance,
+        articleName: "Accès Pack Mine VIP 1 (Solde minimum requis : 3 500 FCFA)"
+      });
+      return;
+    }
     setVipLevelModal(null);
     if (vip1SavedStep === 'article2') {
       setVip1CommanderStep('article2');
@@ -307,6 +326,15 @@ export function DashboardScreen({
       if (showToast) showToast("Le niveau VIP 2 est déjà terminé, validé et bloqué !", "info");
       return;
     }
+    if (balance < 10000) {
+      setVipLevelModal(null);
+      setInsufficientBalanceModal({
+        requiredPrice: 10000,
+        missingAmount: 10000 - balance,
+        articleName: "Accès Pack Mine VIP 2 (Solde minimum requis : 10 000 FCFA)"
+      });
+      return;
+    }
     setVipLevelModal(null);
     if (vip2SavedStep === 'article3') {
       setVip2CommanderStep('article3');
@@ -318,16 +346,16 @@ export function DashboardScreen({
   };
 
   const handlePayArticle1 = () => {
-    if (balance < 700) {
+    if (balance < 1700) {
       setInsufficientBalanceModal({
-        requiredPrice: 700,
-        missingAmount: 700 - balance,
+        requiredPrice: 1700,
+        missingAmount: 1700 - balance,
         articleName: "Pelle & Détecteur Aurifère (VIP 1)"
       });
       return;
     }
     if (onCompleteTask) {
-      onCompleteTask("Achat Article de Mine VIP 1 - Lot #1 (Détecteur 700F)", -700);
+      onCompleteTask("Achat Article de Mine VIP 1 - Lot #1 (Détecteur 1 700F)", -1700);
     }
     setVip1SavedStep('article2');
     if (userPhone) {
@@ -337,20 +365,20 @@ export function DashboardScreen({
   };
 
   const handlePayArticle2 = () => {
-    if (balance < 800) {
+    if (balance < 1800) {
       setInsufficientBalanceModal({
-        requiredPrice: 800,
-        missingAmount: 800 - balance,
+        requiredPrice: 1800,
+        missingAmount: 1800 - balance,
         articleName: "Sonde Aurifère Haute Précision (VIP 1)"
       });
       return;
     }
     if (onCompleteTask) {
-      onCompleteTask("Achat Article de Mine VIP 1 - Lot #2 (Sonde 800F)", -800);
+      onCompleteTask("Achat Article de Mine VIP 1 - Lot #2 (Sonde 1 800F)", -1800);
     }
     setTimeout(() => {
       if (onCompleteTask) {
-        onCompleteTask("Récompense Validation VIP 1", 17000);
+        onCompleteTask("Récompense Validation VIP 1", 100000);
       }
       setIsVip1Finished(true);
       setVip1SavedStep('article1');
@@ -370,18 +398,18 @@ export function DashboardScreen({
     }, 250);
   };
 
-  // VIP 2 Payments
+  // VIP 2 Payments (Article 1: 25 000F, Article 2: 50 000F, Article 3: 75 000F • Gain final: 500 000 FCFA)
   const handlePayVip2Article1 = () => {
     if (balance < 25000) {
       setInsufficientBalanceModal({
         requiredPrice: 25000,
         missingAmount: 25000 - balance,
-        articleName: "Concasseur Aurifère Lourd (VIP 2)"
+        articleName: "Broyeur Hydraulique Quartz 24K (VIP 2 • 1/3 • 25 000 FCFA)"
       });
       return;
     }
     if (onCompleteTask) {
-      onCompleteTask("Achat Article de Mine VIP 2 - Lot #1 (Concasseur 25 000F)", -25000);
+      onCompleteTask("Achat Article de Mine VIP 2 - Lot #1 (Broyeur 25 000F)", -25000);
     }
     setVip2SavedStep('article2');
     if (userPhone) {
@@ -395,7 +423,7 @@ export function DashboardScreen({
       setInsufficientBalanceModal({
         requiredPrice: 50000,
         missingAmount: 50000 - balance,
-        articleName: "Refroidisseur Industriel (VIP 2)"
+        articleName: "Refroidisseur de Creusets d'Or (VIP 2 • 2/3 • 50 000 FCFA)"
       });
       return;
     }
@@ -414,7 +442,7 @@ export function DashboardScreen({
       setInsufficientBalanceModal({
         requiredPrice: 75000,
         missingAmount: 75000 - balance,
-        articleName: "Filtre de Lingots d'Or Massif (VIP 2)"
+        articleName: "Moule & Filtre Spectrométrique (VIP 2 • 3/3 • 75 000 FCFA)"
       });
       return;
     }
@@ -423,7 +451,7 @@ export function DashboardScreen({
     }
     setTimeout(() => {
       if (onCompleteTask) {
-        onCompleteTask("Récompense Validation VIP 2", 200000);
+        onCompleteTask("Récompense Validation VIP 2", 500000);
       }
       setIsVip2Finished(true);
       setVip2SavedStep('article1');
@@ -447,11 +475,11 @@ export function DashboardScreen({
   const totalInvestedSum = activeInvestments.reduce((sum, item) => sum + item.price, 0);
   const totalDailyRevenue = activeInvestments.reduce((sum, item) => sum + item.dailyProfit, 0);
 
-  // VIP 1 is granted when user balance or capital is >= 2300 FCFA
-  const isVip1Unlocked = balance >= 2300 || totalInvestedSum >= 2300;
+  // VIP 1 requires user balance to be >= 3500 FCFA
+  const isVip1Unlocked = balance >= 3500;
 
-  // VIP 2 is unlocked when user sum/balance >= 10,000 FCFA or VIP 1 is finished
-  const isVip2Unlocked = isVip1Finished || balance >= 10000 || totalInvestedSum >= 10000;
+  // VIP 2 requires user balance to be >= 10,000 FCFA
+  const isVip2Unlocked = balance >= 10000;
 
   // Helper to check if a task is locked based on VIP rules
   const isTaskLocked = (task: DailyTask) => {
@@ -548,144 +576,166 @@ export function DashboardScreen({
   const renderVipLevelTickets = () => (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h3 className="text-base font-extrabold font-display text-white flex items-center gap-2">
+        <h3 className="text-sm md:text-base font-extrabold font-display text-white flex items-center gap-2">
           <Crown className="w-4 h-4 text-amber-400" />
-          <span>Liste des niveaux de membre VIP</span>
+          <span>Niveaux de Membres Exécutifs VIP</span>
         </h3>
-        <span className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md font-bold font-mono">
-          Niveaux d'Adhésion
+        <span className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full font-bold font-mono">
+          Adhésion Officielle
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* VIP 1 TICKET - ACCESSIBLE DÈS 2 300 FCFA */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        {/* VIP 1 TICKET - ACCESSIBLE DÈS 3 500 FCFA */}
         <div
           onClick={() => setVipLevelModal({
             level: 'VIP1',
-            price: '2 300.00 FCFA',
+            price: '3 500.00 FCFA',
             title: isVip1Finished
               ? 'Niveau Membre VIP 1 — Terminé & Validé !'
               : isVip1Unlocked ? 'Niveau Membre VIP 1 — Accès Débloqué !' : 'Niveau Membre VIP 1',
             subtitle: isVip1Finished
-              ? 'Félicitations ! Vous avez complété les articles du VIP 1 et empoché 17 000 FCFA !'
+              ? 'Félicitations ! Vous avez complété les articles du VIP 1 et empoché 100 000 FCFA !'
               : isVip1Unlocked
               ? `Votre solde est de ${balance.toLocaleString('fr-FR')} FCFA. Cliquez sur Commander pour acheter les articles de mine !`
-              : 'Un solde d\'au moins 2 300 FCFA sur votre compte débloque l\'accès au VIP 1.',
+              : 'Un solde d\'au moins 3 500 FCFA sur votre compte débloque l\'accès au VIP 1.',
             isVip1: true,
             isVip2: false,
             isVip3: false
           })}
-          className="relative bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 rounded-2xl p-4 shadow-lg overflow-hidden flex justify-between items-center cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all border border-amber-300/60 group"
+          className="relative bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 rounded-2xl p-4.5 shadow-xl overflow-hidden flex justify-between items-center cursor-pointer hover:border-amber-400/50 hover:scale-[1.01] active:scale-[0.99] transition-all border border-amber-500/30 group"
         >
-          <div className="absolute right-14 -top-2.5 w-5 h-5 rounded-full bg-slate-950" />
-          <div className="absolute right-14 -bottom-2.5 w-5 h-5 rounded-full bg-slate-950" />
-          <div className="absolute right-14 top-2 bottom-2 border-r-2 border-dashed border-slate-950/25" />
-
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <h4 className="text-2xl font-black font-display tracking-tight text-slate-950 leading-none">VIP1</h4>
-              {isVip1Finished ? (
-                <CheckCircle className="w-5 h-5 text-emerald-950 fill-emerald-400 animate-pulse" />
-              ) : isVip1Unlocked ? (
-                <CheckCircle className="w-4 h-4 text-emerald-950 fill-emerald-400" />
-              ) : null}
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+          
+          <div className="space-y-2 relative z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black font-display tracking-tight text-white flex items-center gap-1.5 leading-none">
+                VIP 1
+                {isVip1Finished ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20 animate-pulse" />
+                ) : isVip1Unlocked ? (
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                ) : null}
+              </span>
+              <span className="text-[9px] uppercase font-bold tracking-wider text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md font-mono">
+                Adhésion de Base
+              </span>
             </div>
             
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-sm font-black font-mono text-slate-950">2 300.00F</span>
-              <span className="text-[10px] font-black bg-slate-950 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30 font-mono shadow-sm">
-                Gain Total : 17 000 FCFA
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-black font-mono text-white">3 500 FCFA</span>
+              <span className="text-[10px] font-black bg-emerald-500/15 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-mono shadow-sm">
+                Gain Total : 100 000 FCFA
               </span>
             </div>
             
             {isVip1Finished ? (
-              <span className="text-[9px] font-black px-2 py-0.5 rounded-md inline-block bg-emerald-950 text-emerald-300 border border-emerald-400/40">
-                ✓ VIP 1 Terminé (+17 000F)
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-lg inline-block bg-emerald-950/80 text-emerald-300 border border-emerald-400/30">
+                ✓ VIP 1 Terminé (+100 000F)
               </span>
             ) : (
-              <div className="flex flex-col gap-1 items-start pt-0.5">
-                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md inline-block ${
-                  isVip1Unlocked ? 'bg-emerald-950 text-emerald-300' : 'bg-slate-950 text-amber-400'
+              <div className="flex flex-col gap-1.5 items-start pt-0.5">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md inline-block ${
+                  isVip1Unlocked ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-950/80 text-amber-400 border border-slate-800'
                 }`}>
-                  {isVip1Unlocked ? 'Accès Débloqué (≥ 2 300F)' : 'Solde Requis : 2 300F'}
+                  {isVip1Unlocked ? 'Accès Débloqué (≥ 3 500F)' : 'Solde Requis : 3 500F'}
                 </span>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStartVip1Commander();
-                  }}
-                  className="px-2.5 py-1 bg-slate-950 hover:bg-slate-900 text-amber-400 font-extrabold text-[10px] rounded-lg shadow-md flex items-center gap-1 border border-amber-400/40 cursor-pointer active:scale-95 transition-transform"
-                >
-                  <ShoppingCart className="w-3 h-3 text-amber-400" />
-                  <span>{vip1SavedStep === 'article2' ? 'Reprendre (2/2)' : 'Commander'}</span>
-                </button>
+                {isVip1Unlocked ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartVip1Commander();
+                    }}
+                    className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    <span>{vip1SavedStep === 'article2' ? 'Reprendre (2/2)' : 'Commander'}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenRecharge();
+                    }}
+                    className="px-3 py-1.5 bg-slate-950 hover:bg-slate-850 text-amber-300 font-bold text-xs rounded-xl shadow-md border border-amber-500/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Débloquer dès 3 500F</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
 
-          <div className="pr-1 flex flex-col items-end opacity-90 select-none">
-            <div className="flex gap-0.5 h-10 items-center">
-              <div className="w-1 h-8 bg-slate-950"></div>
-              <div className="w-0.5 h-8 bg-slate-950"></div>
-              <div className="w-1.5 h-8 bg-slate-950"></div>
-              <div className="w-0.5 h-8 bg-slate-950"></div>
-              <div className="w-1 h-8 bg-slate-950"></div>
-              <div className="w-2 h-8 bg-slate-950"></div>
-              <div className="w-0.5 h-8 bg-slate-950"></div>
+          <div className="flex flex-col items-end gap-1.5 shrink-0 relative z-10 pl-2">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-amber-400/40 relative shadow-lg shadow-black/40">
+              <img
+                src={imgGoldVaultBars}
+                alt="Lingots 24K VIP 1"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+              <span className="absolute bottom-1 right-1 text-[8px] font-mono font-bold text-amber-300 bg-black/70 px-1.5 py-0.5 rounded backdrop-blur-xs">
+                100k F
+              </span>
             </div>
-            <span className="text-[7px] font-mono font-bold text-slate-950 tracking-tighter">ISBN 80-247-1514-7</span>
+            <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">CERTIFIÉ VIP 1</span>
           </div>
         </div>
 
-        {/* VIP 2 TICKET - ACCESSIBLE SI SOLDE/SOMME >= 10 000 FCFA OU VIP 1 FINI */}
+        {/* VIP 2 TICKET - ACCESSIBLE SI SOLDE >= 10 000 FCFA */}
         <div
           onClick={() => setVipLevelModal({
             level: 'VIP2',
-            price: '5000.00 FCFA',
+            price: '10 000.00 FCFA',
             title: isVip2Finished
               ? 'Niveau Membre VIP 2 — Terminé & Validé !'
               : isVip2Unlocked ? 'Niveau Membre VIP 2 — Accès Débloqué !' : 'Niveau Membre VIP 2',
             subtitle: isVip2Finished
-              ? 'Félicitations ! Vous avez accompli le VIP 2 (25 000F, 50 000F, 75 000F) et empoché 200 000 FCFA !'
+              ? 'Félicitations ! Vous avez accompli le VIP 2 (25 000F, 50 000F, 75 000F) et empoché 500 000 FCFA !'
               : isVip2Unlocked
-              ? 'Félicitations ! VIP 2 Débloqué (Somme ≥ 10 000 FCFA ou VIP 1 validé). Cliquez sur Commander pour passer vos 3 commandes VIP 2 !'
-              : 'Pour accéder au VIP 2, votre solde ou investissement doit être supérieur à 10 000 FCFA (ou terminer le VIP 1) !',
+              ? 'Félicitations ! VIP 2 Débloqué (Solde ≥ 10 000 FCFA). Cliquez sur Commander pour passer vos 3 commandes VIP 2 !'
+              : 'Pour accéder au VIP 2, le solde de votre compte doit être supérieur ou égal à 10 000 FCFA !',
             isVip1: false,
             isVip2: true,
             isVip3: false
           })}
-          className="relative bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 rounded-2xl p-4 shadow-lg overflow-hidden flex justify-between items-center cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all border border-amber-300/60 group"
+          className="relative bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 rounded-2xl p-4.5 shadow-xl overflow-hidden flex justify-between items-center cursor-pointer hover:border-amber-400/50 hover:scale-[1.01] active:scale-[0.99] transition-all border border-amber-500/30 group"
         >
-          <div className="absolute right-14 -top-2.5 w-5 h-5 rounded-full bg-slate-950" />
-          <div className="absolute right-14 -bottom-2.5 w-5 h-5 rounded-full bg-slate-950" />
-          <div className="absolute right-14 top-2 bottom-2 border-r-2 border-dashed border-slate-950/25" />
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
 
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <h4 className="text-2xl font-black font-display tracking-tight text-slate-950 leading-none">VIP2</h4>
-              {isVip2Finished ? (
-                <CheckCircle className="w-5 h-5 text-emerald-950 fill-emerald-400 animate-pulse" />
-              ) : isVip2Unlocked ? (
-                <CheckCircle className="w-4 h-4 text-emerald-950 fill-emerald-400" />
-              ) : null}
+          <div className="space-y-2 relative z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black font-display tracking-tight text-white flex items-center gap-1.5 leading-none">
+                VIP 2
+                {isVip2Finished ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20 animate-pulse" />
+                ) : isVip2Unlocked ? (
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                ) : null}
+              </span>
+              <span className="text-[9px] uppercase font-bold tracking-wider text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md font-mono">
+                Adhésion Avancée
+              </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-sm font-black font-mono text-slate-950">5000.00F</span>
-              <span className="text-[10px] font-black bg-slate-950 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30 font-mono shadow-sm">
-                Gain Total : 200 000 FCFA
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-black font-mono text-white">10 000 FCFA</span>
+              <span className="text-[10px] font-black bg-emerald-500/15 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-mono shadow-sm">
+                Gain Total : 500 000 FCFA
               </span>
             </div>
             
             {isVip2Finished ? (
-              <span className="text-[9px] font-black px-2 py-0.5 rounded-md inline-block bg-emerald-950 text-emerald-300 border border-emerald-400/40">
-                ✓ VIP 2 Terminé (+200 000F)
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-lg inline-block bg-emerald-950/80 text-emerald-300 border border-emerald-400/30">
+                ✓ VIP 2 Terminé (+500 000F)
               </span>
             ) : isVip2Unlocked ? (
-              <div className="flex flex-col gap-1 items-start pt-0.5">
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-md inline-block bg-emerald-950 text-emerald-300">
-                  Éligible VIP 2
+              <div className="flex flex-col gap-1.5 items-start pt-0.5">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Accès Débloqué (≥ 10 000F)
                 </span>
 
                 <button
@@ -693,9 +743,9 @@ export function DashboardScreen({
                     e.stopPropagation();
                     handleStartVip2Commander();
                   }}
-                  className="px-2.5 py-1 bg-slate-950 hover:bg-slate-900 text-amber-400 font-extrabold text-[10px] rounded-lg shadow-md flex items-center gap-1 border border-amber-400/40 cursor-pointer active:scale-95 transition-transform"
+                  className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
                 >
-                  <ShoppingCart className="w-3 h-3 text-amber-400" />
+                  <ShoppingCart className="w-3.5 h-3.5" />
                   <span>
                     {vip2SavedStep === 'article3'
                       ? 'Reprendre (3/3)'
@@ -706,22 +756,39 @@ export function DashboardScreen({
                 </button>
               </div>
             ) : (
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-md inline-block bg-slate-950 text-amber-400">
-                Requis : Somme ≥ 10 000F
-              </span>
+              <div className="flex flex-col gap-1.5 items-start pt-0.5">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md inline-block bg-slate-950/80 text-amber-400 border border-slate-800">
+                  Solde Requis : 10 000F
+                </span>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenRecharge();
+                  }}
+                  className="px-3 py-1.5 bg-slate-950 hover:bg-slate-850 text-amber-300 font-bold text-xs rounded-xl shadow-md border border-amber-500/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                >
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Débloquer dès 10 000F</span>
+                </button>
+              </div>
             )}
           </div>
 
-          <div className="pr-1 flex flex-col items-end opacity-90 select-none">
-            <div className="flex gap-0.5 h-10 items-center">
-              <div className="w-1.5 h-8 bg-slate-950"></div>
-              <div className="w-0.5 h-8 bg-slate-950"></div>
-              <div className="w-1 h-8 bg-slate-950"></div>
-              <div className="w-2 h-8 bg-slate-950"></div>
-              <div className="w-0.5 h-8 bg-slate-950"></div>
-              <div className="w-1 h-8 bg-slate-950"></div>
+          <div className="flex flex-col items-end gap-1.5 shrink-0 relative z-10 pl-2">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-emerald-400/40 relative shadow-lg shadow-black/40">
+              <img
+                src={imgGoldMiningRig}
+                alt="Excavatrice VIP 2"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+              <span className="absolute bottom-1 right-1 text-[8px] font-mono font-bold text-emerald-300 bg-black/70 px-1.5 py-0.5 rounded backdrop-blur-xs">
+                500k F
+              </span>
             </div>
-            <span className="text-[7px] font-mono font-bold text-slate-950 tracking-tighter">ISBN 80-247-1514-7</span>
+            <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">CERTIFIÉ VIP 2</span>
           </div>
         </div>
 
@@ -736,32 +803,43 @@ export function DashboardScreen({
             isVip2: false,
             isVip3: true
           })}
-          className="relative bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-slate-950 rounded-2xl p-4 shadow-xl overflow-hidden flex justify-between items-center cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all border-2 border-amber-200 group"
+          className="relative bg-gradient-to-br from-amber-500/20 via-slate-900 to-amber-950/50 rounded-2xl p-4.5 shadow-xl overflow-hidden flex justify-between items-center cursor-pointer hover:border-amber-400/60 hover:scale-[1.01] active:scale-[0.99] transition-all border-2 border-amber-500/40 group"
         >
-          <div className="absolute right-14 -top-2.5 w-5 h-5 rounded-full bg-slate-950" />
-          <div className="absolute right-14 -bottom-2.5 w-5 h-5 rounded-full bg-slate-950" />
-          <div className="absolute right-14 top-2 bottom-2 border-r-2 border-dashed border-slate-950/25" />
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-400/20 rounded-full blur-xl pointer-events-none" />
 
-          <div className="space-y-1">
-            <div className="flex items-center gap-1">
-              <h4 className="text-2xl font-black font-display tracking-tight text-slate-950 leading-none">VIP3</h4>
-              <Crown className="w-4 h-4 text-slate-950 animate-bounce" />
+          <div className="space-y-2 relative z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black font-display tracking-tight text-white flex items-center gap-1.5 leading-none">
+                VIP 3
+                <Crown className="w-4 h-4 text-amber-400 animate-pulse" />
+              </span>
+              <span className="text-[9px] uppercase font-bold tracking-wider text-amber-300 bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded-md font-mono">
+                Statut Société
+              </span>
             </div>
-            <div className="mt-1 bg-slate-950 text-amber-400 text-[10px] font-extrabold px-2 py-1 rounded-md inline-flex flex-col gap-0.5 shadow-sm max-w-[190px]">
-              <span className="leading-tight">Vous êtes devenus membre de notre société</span>
-              <span className="text-[9px] text-green-400 font-mono font-bold leading-tight">Salaire : 35 000 - 65 000 FCFA/jour</span>
+            
+            <div className="bg-slate-950/80 border border-amber-500/30 text-amber-300 text-[10px] font-extrabold px-3 py-2 rounded-xl inline-flex flex-col gap-1 shadow-sm max-w-[210px]">
+              <span className="leading-tight text-white">Vous êtes devenus membre de notre société</span>
+              <span className="text-[10px] text-emerald-400 font-mono font-black leading-tight">
+                Salaire : 35 000 - 65 000 FCFA/jour
+              </span>
             </div>
           </div>
 
-          <div className="pr-1 flex flex-col items-end opacity-90 select-none">
-            <div className="flex gap-0.5 h-10 items-center">
-              <div className="w-1 h-8 bg-slate-950"></div>
-              <div className="w-2 h-8 bg-slate-950"></div>
-              <div className="w-0.5 h-8 bg-slate-950"></div>
-              <div className="w-1.5 h-8 bg-slate-950"></div>
-              <div className="w-1 h-8 bg-slate-950"></div>
+          <div className="flex flex-col items-end gap-1.5 shrink-0 relative z-10 pl-2">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-amber-400/50 relative shadow-lg shadow-black/40">
+              <img
+                src={imgGoldRefineryHero}
+                alt="Raffinerie VIP 3"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+              <span className="absolute bottom-1 right-1 text-[8px] font-mono font-bold text-amber-300 bg-black/70 px-1.5 py-0.5 rounded backdrop-blur-xs">
+                Salaire
+              </span>
             </div>
-            <span className="text-[7px] font-mono font-bold text-slate-950 tracking-tighter">ISBN 80-247-1514-7</span>
+            <span className="text-[8px] font-mono font-bold text-amber-400 tracking-wider">ÉLITE 24K</span>
           </div>
         </div>
       </div>
@@ -815,59 +893,70 @@ NOTIFY pgrst, 'reload schema';`}
       {/* ==================== TAB 1: ACCUEIL (HOME) ==================== */}
       {(activeTab === 'home') && (
         <div className="space-y-5">
+          {/* CINEMATIC REFINERY HERO BANNER */}
+          <RefineryHeroBanner
+            onOpenPlans={() => onTabChange && onTabChange('plans')}
+            onOpenTasks={() => onTabChange && onTabChange('tasks')}
+          />
+
           {/* HERO BLOCK & CORE METRICS CARD */}
           <div>
             {/* Glowing Gold Card (Main Balance) */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/30 rounded-2xl p-5 relative overflow-hidden shadow-[0_0_20px_rgba(212,175,55,0.05)] flex flex-col justify-between"
+              transition={{ duration: 0.35 }}
+              className="bg-gradient-to-br from-slate-900 via-[#0d1424] to-amber-950/40 border border-amber-500/35 rounded-3xl p-5 md:p-6 relative overflow-hidden shadow-xl shadow-black/40 flex flex-col justify-between"
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="flex items-start justify-between relative z-10">
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <Wallet className="w-3.5 h-3.5 text-amber-400" />
-                    Portefeuille Principal Gold Yield
-                  </span>
-                  <h2 className="text-3xl md:text-4xl font-black text-white font-mono tracking-tight leading-none">
+              <div className="flex items-start justify-between relative z-10 gap-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-amber-300 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full font-mono">
+                      <Wallet className="w-3 h-3 text-amber-400" />
+                      Portefeuille Principal
+                    </span>
+                    <span className="hidden sm:inline-block text-[10px] font-mono text-slate-400">
+                      ID: GY-CI-{(userPhone || '7788').slice(-4)}
+                    </span>
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-black text-white font-mono tracking-tight leading-none pt-1">
                     <span>
                       {balance.toLocaleString('fr-FR')}
                     </span>
-                    <span className="text-amber-400 text-xl md:text-2xl font-bold ml-1.5">FCFA</span>
+                    <span className="text-amber-400 text-xl md:text-2xl font-bold ml-2">FCFA</span>
                   </h2>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {onOpenTutorial && (
                     <button
                       onClick={onOpenTutorial}
-                      className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shadow-amber-500/10 cursor-pointer"
-                      title="Lancer le tutoriel interactif"
+                      className="px-3.5 py-2 bg-gradient-to-r from-amber-500/15 to-yellow-500/10 hover:from-amber-500/25 hover:to-yellow-500/20 text-amber-300 border border-amber-500/35 hover:border-amber-500/50 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm shadow-amber-500/10 cursor-pointer active:scale-95"
+                      title="Consulter le Guide Officiel & Paliers VIP"
                     >
-                      <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Guide & Tuto</span>
+                      <HelpCircle className="w-4 h-4 text-amber-400 stroke-[2.5]" />
+                      <span className="font-mono uppercase tracking-wider text-[11px]">Guide VIP</span>
                     </button>
                   )}
-                  <div className="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800">
-                    <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+                  <div className="p-2.5 bg-slate-950/80 rounded-xl border border-amber-500/20 text-amber-400">
+                    <Sparkles className="w-5 h-5 animate-pulse" />
                   </div>
                 </div>
               </div>
 
               {/* Quick Stats inside the main wallet */}
-              <div className="grid grid-cols-2 gap-3 pt-4 mt-4 border-t border-slate-800/60 relative z-10">
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-semibold">Capital Investi</p>
-                  <p className="text-sm font-bold font-mono text-white">
+              <div className="grid grid-cols-2 gap-3 pt-4 mt-5 border-t border-white/[0.08] relative z-10">
+                <div className="bg-slate-950/50 border border-white/[0.04] rounded-2xl p-3">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Capital Investi</p>
+                  <p className="text-base font-black font-mono text-white mt-0.5">
                     {totalInvestedSum.toLocaleString('fr-FR')} FCFA
                   </p>
                 </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-semibold">Rendement Journalier</p>
-                  <p className="text-sm font-bold font-mono text-green-400 flex items-center gap-1">
+                <div className="bg-slate-950/50 border border-white/[0.04] rounded-2xl p-3">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Rendement Journalier</p>
+                  <p className="text-base font-black font-mono text-emerald-400 flex items-center gap-1 mt-0.5">
                     <TrendingUp className="w-3.5 h-3.5" />
                     +{totalDailyRevenue.toLocaleString('fr-FR')} FCFA
                   </p>
@@ -880,43 +969,43 @@ NOTIFY pgrst, 'reload schema';`}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <button
               onClick={onOpenRecharge}
-              className="p-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/30 rounded-xl transition-all text-left flex flex-col gap-2.5 group cursor-pointer"
+              className="p-4 bg-slate-900/90 hover:bg-slate-850 border border-white/[0.07] hover:border-amber-500/40 rounded-2xl transition-all text-left flex flex-col gap-3 group cursor-pointer shadow-lg shadow-black/20"
             >
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">
-                <Plus className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/25 group-hover:text-amber-300 transition-colors">
+                <Plus className="w-4.5 h-4.5 stroke-[2.5]" />
               </div>
               <div>
                 <span className="text-xs font-bold text-white block">Recharger</span>
-                <span className="text-[9px] text-slate-400">Dépôt min: 3 000 FCFA</span>
+                <span className="text-[10px] text-slate-400 font-mono">Dépôt min: 3 000 F</span>
               </div>
             </button>
 
             <button
               onClick={onOpenWithdraw}
-              className="p-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/30 rounded-xl transition-all text-left flex flex-col gap-2.5 group cursor-pointer"
+              className="p-4 bg-slate-900/90 hover:bg-slate-850 border border-white/[0.07] hover:border-emerald-500/40 rounded-2xl transition-all text-left flex flex-col gap-3 group cursor-pointer shadow-lg shadow-black/20"
             >
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/20 group-hover:text-emerald-300 transition-colors">
-                <ArrowUpRight className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/25 group-hover:text-emerald-300 transition-colors">
+                <ArrowUpRight className="w-4.5 h-4.5 stroke-[2.5]" />
               </div>
               <div>
                 <span className="text-xs font-bold text-white block">Retirer</span>
-                <span className="text-[9px] text-slate-400">Retrait min: 1 000 FCFA</span>
+                <span className="text-[10px] text-slate-400 font-mono">Retrait min: 1 000 F</span>
               </div>
             </button>
 
             <button
               onClick={() => onTabChange && onTabChange('tasks')}
-              className="p-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/30 rounded-xl transition-all text-left flex flex-col gap-2.5 group cursor-pointer relative overflow-hidden"
+              className="p-4 bg-slate-900/90 hover:bg-slate-850 border border-white/[0.07] hover:border-amber-500/40 rounded-2xl transition-all text-left flex flex-col gap-3 group cursor-pointer relative overflow-hidden shadow-lg shadow-black/20"
             >
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">
-                <CheckSquare className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/25 group-hover:text-amber-300 transition-colors">
+                <CheckSquare className="w-4.5 h-4.5 stroke-[2.5]" />
               </div>
               <div>
-                <span className="text-xs font-bold text-white block flex items-center gap-1">
+                <span className="text-xs font-bold text-white block flex items-center gap-1.5">
                   Tâches VIP
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 </span>
-                <span className="text-[9px] text-slate-400">Jusqu'à +13 500 F/j</span>
+                <span className="text-[10px] text-amber-300/80 font-mono font-semibold">+13 500 F/jour</span>
               </div>
             </button>
 
@@ -924,14 +1013,14 @@ NOTIFY pgrst, 'reload schema';`}
               href="https://t.me/goldyieldservice"
               target="_blank"
               rel="noreferrer"
-              className="p-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-sky-500/30 rounded-xl transition-all text-left flex flex-col gap-2.5 group cursor-pointer"
+              className="p-4 bg-slate-900/90 hover:bg-slate-850 border border-white/[0.07] hover:border-sky-500/40 rounded-2xl transition-all text-left flex flex-col gap-3 group cursor-pointer shadow-lg shadow-black/20"
             >
-              <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:bg-sky-500/20 group-hover:text-sky-300 transition-colors">
-                <MessageSquare className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:bg-sky-500/25 group-hover:text-sky-300 transition-colors">
+                <MessageSquare className="w-4.5 h-4.5 stroke-[2]" />
               </div>
               <div>
-                <span className="text-xs font-bold text-white block">Support t.me</span>
-                <span className="text-[9px] text-slate-400">Canal officiel goldyield</span>
+                <span className="text-xs font-bold text-white block">Support Télégram</span>
+                <span className="text-[10px] text-slate-400">Assistance 24/7</span>
               </div>
             </a>
           </div>
@@ -940,25 +1029,25 @@ NOTIFY pgrst, 'reload schema';`}
           {renderVipLevelTickets()}
 
           {/* REFERRAL CARD */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl shadow-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="bg-gradient-to-br from-slate-900 via-[#0b1220] to-slate-950 border border-white/[0.08] rounded-3xl shadow-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-1.5 text-center md:text-left">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 flex items-center justify-center md:justify-start gap-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 flex items-center justify-center md:justify-start gap-1 font-mono">
                 <Sparkles className="w-3.5 h-3.5" /> Programme Parrainage Gold
               </span>
-              <h4 className="text-lg font-bold text-white">Partagez l'opportunité et gagnez +10%</h4>
-              <p className="text-xs text-slate-400 max-w-lg">
-                Gagnez une commission instantanée de 10% sur chaque recharge effectuée par vos filleuls. Vos amis reçoivent 500 FCFA de bienvenue.
+              <h4 className="text-lg font-black text-white font-display">Partagez l'opportunité et gagnez +10%</h4>
+              <p className="text-xs text-slate-400 max-w-lg leading-relaxed">
+                Gagnez une commission instantanée de 10% sur chaque recharge effectuée par vos filleuls. Vos invités bénéficient également de 500 FCFA de bienvenue.
               </p>
             </div>
 
             <div className="flex flex-col gap-2 w-full md:w-auto items-end shrink-0">
-              <div className="flex items-center gap-3 w-full">
-                <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl font-mono text-xs text-slate-300 select-all flex-1 md:flex-none text-center truncate max-w-[200px] md:max-w-xs">
+              <div className="flex items-center gap-2.5 w-full">
+                <div className="bg-slate-950/90 border border-white/[0.08] px-3.5 py-2.5 rounded-xl font-mono text-xs text-slate-300 select-all flex-1 md:flex-none text-center truncate max-w-[200px] md:max-w-xs">
                   {inviteLink}
                 </div>
                 <button
                   onClick={handleCopyLink}
-                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/10 active:scale-95 shrink-0"
+                  className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 rounded-xl font-black text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 shrink-0"
                 >
                   {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   <span>{copied ? 'Copié !' : 'Partager'}</span>
@@ -991,6 +1080,21 @@ NOTIFY pgrst, 'reload schema';`}
                   }`}
                 >
                   <div className="space-y-3">
+                    {plan.imageUrl && (
+                      <div className="h-36 w-full rounded-2xl overflow-hidden relative border border-white/[0.08] shadow-md group-hover:border-amber-400/40 transition-colors">
+                        <img
+                          src={plan.imageUrl}
+                          alt={plan.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                        <span className="absolute bottom-2 left-2 text-[10px] font-mono font-black text-slate-950 bg-amber-400 px-2 py-0.5 rounded shadow">
+                          {plan.dailyProfit > 0 ? `+${plan.dailyProfit.toLocaleString('fr-FR')} FCFA/j` : 'ÉQUIPEMENT VALIDATION'}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between items-center">
                       <div className={`p-3 bg-gradient-to-br ${plan.colorScheme.from} ${plan.colorScheme.to} rounded-2xl border border-white/5`}>
                         <PlanIcon name={plan.iconName} className={`w-5 h-5 ${plan.colorScheme.text}`} />
@@ -1115,66 +1219,66 @@ NOTIFY pgrst, 'reload schema';`}
 
             {!isVip1Finished ? (
               /* VIP 1 ACTIVE / UNFINISHED CARD */
-              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border-2 border-amber-500/40 rounded-3xl p-6 relative overflow-hidden space-y-4 shadow-xl">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800/80 pb-4">
+              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/40 rounded-3xl p-6 relative overflow-hidden space-y-4 shadow-xl">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/[0.08] pb-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-base font-extrabold text-white">Niveau VIP 1 — Articles de Mine</h4>
-                      <span className="text-[10px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30 uppercase tracking-wider">
+                      <h4 className="text-base font-black font-display text-white">Niveau VIP 1 — Articles de Mine</h4>
+                      <span className="text-[10px] font-black bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30 uppercase tracking-wider font-mono">
                         En cours
                       </span>
                     </div>
                     <p className="text-xs text-slate-300">
                       {vip1SavedStep === 'article2' 
-                        ? "Étape 2 / 2 : Il vous reste 1 dernier article à régler pour encaisser vos 17 000 FCFA."
-                        : "Étape 1 / 2 : Dépensez 700 F pour entamer votre session VIP 1 et gagner 17 000 FCFA."}
+                        ? "Étape 2 / 2 : Il vous reste 1 dernier article à régler pour encaisser votre prime de 100 000 FCFA."
+                        : "Étape 1 / 2 : Complétez les 2 articles VIP 1 pour empocher vos 100 000 FCFA de gain total."}
                     </p>
                   </div>
 
-                  <div className="text-left sm:text-right shrink-0">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Prime de validation</span>
-                    <span className="text-base font-black font-mono text-green-400">+17 000 FCFA</span>
+                  <div className="text-left sm:text-right shrink-0 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">Gain Total Garanti</span>
+                    <span className="text-base font-black font-mono text-emerald-400">+100 000 FCFA</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950/80 rounded-2xl p-3.5 border border-slate-800 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950/70 rounded-2xl p-3.5 border border-white/[0.06] text-xs">
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-bold">Avancement</span>
-                    <span className="font-extrabold text-white font-mono">
+                    <span className="text-slate-400 block text-[9px] uppercase font-bold font-mono">Avancement</span>
+                    <span className="font-black text-white font-mono text-sm">
                       {vip1SavedStep === 'article2' ? '50% (1/2 Articles)' : '0% (0/2 Articles)'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-bold">Prochaine étape</span>
-                    <span className="font-extrabold text-amber-400 font-mono">
+                    <span className="text-slate-400 block text-[9px] uppercase font-bold font-mono">Prochaine étape</span>
+                    <span className="font-black text-amber-400 font-mono text-sm">
                       {vip1SavedStep === 'article2' ? '800 FCFA' : '700 FCFA'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-bold">Statut Accès</span>
+                    <span className="text-slate-400 block text-[9px] uppercase font-bold font-mono">Statut Accès</span>
                     <span className={`font-bold ${isVip1Unlocked ? 'text-emerald-400' : 'text-amber-400'}`}>
-                      {isVip1Unlocked ? 'Débloqué (Solde ≥ 2 300F)' : 'Requis : Dépôt 2 300F'}
+                      {isVip1Unlocked ? 'Débloqué (Solde ≥ 3 500F)' : 'Requis : Dépôt 3 500F'}
                     </span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-semibold text-slate-400">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
                     <span>Progression VIP 1</span>
                     <span>{vip1SavedStep === 'article2' ? 'Étape 2 sur 2' : 'Étape 1 sur 2'}</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-white/[0.06]">
                     <div 
                       className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-500 rounded-full" 
-                      style={{ width: vip1SavedStep === 'article2' ? '50%' : '5%' }} 
+                      style={{ width: vip1SavedStep === 'article2' ? '50%' : '10%' }} 
                     />
                   </div>
                 </div>
 
                 <button
                   onClick={handleStartVip1Commander}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
                 >
                   <Zap className="w-4 h-4 fill-slate-950" />
                   <span>
@@ -1186,70 +1290,70 @@ NOTIFY pgrst, 'reload schema';`}
               </div>
             ) : !isVip2Finished ? (
               /* VIP 2 ACTIVE / UNFINISHED CARD */
-              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border-2 border-amber-500/40 rounded-3xl p-6 relative overflow-hidden space-y-4 shadow-xl">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800/80 pb-4">
+              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/40 rounded-3xl p-6 relative overflow-hidden space-y-4 shadow-xl">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/[0.08] pb-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-base font-extrabold text-white">Niveau VIP 2 — Équipements de Mine</h4>
-                      <span className="text-[10px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30 uppercase tracking-wider">
+                      <h4 className="text-base font-black font-display text-white">Niveau VIP 2 — Équipements de Mine</h4>
+                      <span className="text-[10px] font-black bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30 uppercase tracking-wider font-mono">
                         En cours
                       </span>
                     </div>
                     <p className="text-xs text-slate-300">
                       {vip2SavedStep === 'article3'
-                        ? 'Étape 3 / 3 : Plus qu’un dernier article à 75 000 F pour débloquer les 200 000 FCFA !'
+                        ? 'Étape 3 / 3 : Plus qu’un dernier article à 75 000 F pour débloquer les 500 000 FCFA !'
                         : vip2SavedStep === 'article2'
-                        ? 'Étape 2 / 3 : Réglez le 2e article à 50 000 F pour progresser vers la prime finale.'
+                        ? 'Étape 2 / 3 : Réglez le 2e article à 50 000 F pour progresser vers la prime finale de 500 000 FCFA.'
                         : 'Étape 1 / 3 : Lancez votre première commande VIP 2 à 25 000 F.'}
                     </p>
                   </div>
 
-                  <div className="text-left sm:text-right shrink-0">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Prime géante</span>
-                    <span className="text-base font-black font-mono text-green-400">+200 000 FCFA</span>
+                  <div className="text-left sm:text-right shrink-0 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">Gain Total Garanti</span>
+                    <span className="text-base font-black font-mono text-emerald-400">+500 000 FCFA</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950/80 rounded-2xl p-3.5 border border-slate-800 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950/70 rounded-2xl p-3.5 border border-white/[0.06] text-xs">
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-bold">Avancement</span>
-                    <span className="font-extrabold text-white font-mono">
+                    <span className="text-slate-400 block text-[9px] uppercase font-bold font-mono">Avancement</span>
+                    <span className="font-black text-white font-mono text-sm">
                       {vip2SavedStep === 'article3' ? '66% (2/3 Articles)' : vip2SavedStep === 'article2' ? '33% (1/3 Articles)' : '0% (0/3 Articles)'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-bold">Prochaine étape</span>
-                    <span className="font-extrabold text-amber-400 font-mono">
+                    <span className="text-slate-400 block text-[9px] uppercase font-bold font-mono">Prochaine étape</span>
+                    <span className="font-black text-amber-400 font-mono text-sm">
                       {vip2SavedStep === 'article3' ? '75 000 FCFA' : vip2SavedStep === 'article2' ? '50 000 FCFA' : '25 000 FCFA'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-bold">Statut Accès</span>
+                    <span className="text-slate-400 block text-[9px] uppercase font-bold font-mono">Statut Accès</span>
                     <span className="font-bold text-emerald-400">
-                      Débloqué (VIP 1 Validé ✓)
+                      Débloqué (Solde ≥ 10 000F)
                     </span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-semibold text-slate-400">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
                     <span>Progression VIP 2</span>
                     <span>
                       {vip2SavedStep === 'article3' ? 'Étape 3 sur 3' : vip2SavedStep === 'article2' ? 'Étape 2 sur 3' : 'Étape 1 sur 3'}
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-white/[0.06]">
                     <div 
                       className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-500 rounded-full" 
-                      style={{ width: vip2SavedStep === 'article3' ? '66%' : vip2SavedStep === 'article2' ? '33%' : '5%' }} 
+                      style={{ width: vip2SavedStep === 'article3' ? '66%' : vip2SavedStep === 'article2' ? '33%' : '10%' }} 
                     />
                   </div>
                 </div>
 
                 <button
                   onClick={handleStartVip2Commander}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
                 >
                   <Zap className="w-4 h-4 fill-slate-950" />
                   <span>
@@ -1437,6 +1541,37 @@ NOTIFY pgrst, 'reload schema';`}
             </div>
           </div>
 
+          {/* Theme & Visual Customizer */}
+          <div className="bg-slate-900/90 border border-amber-500/20 rounded-3xl p-5 sm:p-6 space-y-3 relative overflow-hidden shadow-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/20 shrink-0">
+                  <Palette className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    Thème & Couleurs du Site
+                    <span className="text-[10px] font-mono uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                      {currentTheme}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Choisissez parmi 4 ambiances : Or Royal, Émeraude, Nuit d'Or ou Mode Clair.
+                  </p>
+                </div>
+              </div>
+              {onOpenThemeSelector && (
+                <button
+                  onClick={onOpenThemeSelector}
+                  className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all shrink-0"
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>Changer le Thème</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Parrainage details */}
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -1563,7 +1698,7 @@ NOTIFY pgrst, 'reload schema';`}
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-850 space-y-2">
                 {lockedTaskModal.category === 'beginner' ? (
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Pour débloquer et exécuter les tâches du <strong>VIP 1</strong> (+{lockedTaskModal.reward.toLocaleString('fr-FR')} FCFA), le système exige un solde d'au moins <strong>500 FCFA</strong> sur votre compte. Votre solde actuel est de <strong className="text-amber-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong>.
+                    Pour débloquer et exécuter les tâches du <strong>VIP 1</strong> (+{lockedTaskModal.reward.toLocaleString('fr-FR')} FCFA), le système exige un solde d'au moins <strong>3 500 FCFA</strong> sur votre compte (ou l'accomplissement des commandes VIP 1). Votre solde actuel est de <strong className="text-amber-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong>.
                   </p>
                 ) : lockedTaskModal.category === 'elite' ? (
                   <div className="space-y-2">
@@ -1577,7 +1712,7 @@ NOTIFY pgrst, 'reload schema';`}
                   </div>
                 ) : (
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Pour accéder au <strong>VIP 2</strong> et exécuter cette commande (+{lockedTaskModal.reward.toLocaleString('fr-FR')} FCFA), votre somme totale (solde ou investissement) doit être d'au moins <strong>10 000 FCFA</strong> (ou avoir accompli le VIP 1) !
+                    Pour accéder au <strong>VIP 2</strong> et exécuter cette commande (+{lockedTaskModal.reward.toLocaleString('fr-FR')} FCFA), le solde de votre compte doit être d'au moins <strong>10 000 FCFA</strong>. Votre solde actuel est de <strong className="text-amber-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong>.
                   </p>
                 )}
 
@@ -1691,27 +1826,35 @@ NOTIFY pgrst, 'reload schema';`}
                     <span>Condition de Déblocage VIP 2</span>
                   </div>
                   <p className="text-xs text-slate-200 leading-relaxed font-medium bg-slate-950/80 p-3 rounded-xl border border-amber-500/20">
-                    Pour accéder au <strong>VIP 2</strong>, votre somme totale (solde ou investissements) doit être supérieure ou égale à <strong>10 000 FCFA</strong> (ou avoir accompli le VIP 1) !
+                    {isVip2Unlocked ? (
+                      <span>
+                        Félicitations ! Avec votre solde actuel de <strong className="text-emerald-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong> (≥ 10 000 FCFA), vous avez débloqué l'accès complet au <strong>VIP 2</strong> ! Vous pouvez passer vos commandes d'articles de mine.
+                      </span>
+                    ) : (
+                      <span>
+                        Pour accéder au <strong>VIP 2</strong>, le solde de votre compte doit être supérieur ou égal à <strong>10 000 FCFA</strong> ! Votre solde actuel est de <strong className="text-amber-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong>. Effectuez un dépôt pour débloquer l'accès.
+                      </span>
+                    )}
                   </p>
                 </div>
               ) : (
                 <div className={`border rounded-2xl p-4 space-y-2 ${isVip1Finished ? 'bg-emerald-950/80 border-emerald-500/50' : 'bg-slate-950/80 border-slate-800'}`}>
                   <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-xs">
                     <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400" />
-                    <span>{isVip1Finished ? 'VIP 1 Clôturé & Bloqué (Terminé)' : 'Accès Automatique dès 2 300 FCFA'}</span>
+                    <span>{isVip1Finished ? 'VIP 1 Clôturé & Bloqué (Terminé)' : 'Accès Automatique dès 3 500 FCFA'}</span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {isVip1Finished ? (
                       <span>
-                        Félicitations ! Vous avez accompli l'ensemble des commandes d'articles du <strong>VIP 1</strong> et empoché la récompense globale de <strong>17 000 FCFA</strong>. Ce niveau est désormais sauvegardé et définitivement bloqué.
+                        Félicitations ! Vous avez accompli l'ensemble des commandes d'articles du <strong>VIP 1</strong> et empoché la récompense globale de <strong>100 000 FCFA</strong>. Ce niveau est désormais sauvegardé et définitivement bloqué.
                       </span>
                     ) : isVip1Unlocked ? (
                       <span>
-                        Félicitations ! Avec votre solde actuel de <strong className="text-emerald-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong> (≥ 2 300 FCFA), le système vous donne accès au <strong>VIP 1</strong> ! Vous pouvez exécuter vos quêtes quotidiennes dès maintenant.
+                        Félicitations ! Avec votre solde actuel de <strong className="text-emerald-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong> (≥ 3 500 FCFA), le système vous donne accès au <strong>VIP 1</strong> ! Vous pouvez exécuter vos quêtes quotidiennes dès maintenant.
                       </span>
                     ) : (
                       <span>
-                        Lorsque vous avez un solde d'au moins <strong>2 300 FCFA</strong> sur votre compte, le système vous donne directement accès au <strong>VIP 1</strong> ! Votre solde actuel est de <strong className="text-amber-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong>. Effectuez un dépôt pour débloquer l'accès.
+                        Lorsque vous avez un solde d'au moins <strong>3 500 FCFA</strong> sur votre compte, le système vous donne directement accès au <strong>VIP 1</strong> ! Votre solde actuel est de <strong className="text-amber-400 font-mono">{balance.toLocaleString('fr-FR')} FCFA</strong>. Effectuez un dépôt pour débloquer l'accès.
                       </span>
                     )}
                   </p>
@@ -1720,17 +1863,30 @@ NOTIFY pgrst, 'reload schema';`}
 
               <div className="flex flex-col gap-2 pt-2">
                 {vipLevelModal.isVip1 && !isVip1Finished && (
-                  <button
-                    onClick={handleStartVip1Commander}
-                    className="w-full py-3.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-yellow-400 hover:from-emerald-300 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 active:scale-95"
-                  >
-                    <ShoppingCart className="w-4 h-4 text-slate-950" />
-                    <span>
-                      {vip1SavedStep === 'article2'
-                        ? 'Reprendre la commande VIP 1 (Étape 2/2 • 800 FCFA)'
-                        : 'Commander (Articles de mine VIP 1)'}
-                    </span>
-                  </button>
+                  isVip1Unlocked ? (
+                    <button
+                      onClick={handleStartVip1Commander}
+                      className="w-full py-3.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-yellow-400 hover:from-emerald-300 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                    >
+                      <ShoppingCart className="w-4 h-4 text-slate-950" />
+                      <span>
+                        {vip1SavedStep === 'article2'
+                          ? 'Reprendre la commande VIP 1 (Étape 2/2 • 1 800 FCFA)'
+                          : 'Commander (Articles de mine VIP 1)'}
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setVipLevelModal(null);
+                        onOpenRecharge();
+                      }}
+                      className="w-full py-3.5 bg-slate-800 hover:bg-slate-750 text-amber-300 font-black text-xs rounded-xl border border-amber-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <Lock className="w-4 h-4 text-amber-400" />
+                      <span>Solde insuffisant pour commander (Dépôt min. 3 500F)</span>
+                    </button>
+                  )
                 )}
 
                 {vipLevelModal.isVip1 && isVip1Finished && (
@@ -1740,20 +1896,33 @@ NOTIFY pgrst, 'reload schema';`}
                   </div>
                 )}
 
-                {vipLevelModal.isVip2 && isVip2Unlocked && !isVip2Finished && (
-                  <button
-                    onClick={handleStartVip2Commander}
-                    className="w-full py-3.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-yellow-400 hover:from-emerald-300 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 active:scale-95"
-                  >
-                    <ShoppingCart className="w-4 h-4 text-slate-950" />
-                    <span>
-                      {vip2SavedStep === 'article3'
-                        ? 'Reprendre la commande VIP 2 (Étape 3/3 • 75 000 FCFA)'
-                        : vip2SavedStep === 'article2'
-                        ? 'Reprendre la commande VIP 2 (Étape 2/3 • 50 000 FCFA)'
-                        : 'Commander (Articles de mine VIP 2)'}
-                    </span>
-                  </button>
+                {vipLevelModal.isVip2 && !isVip2Finished && (
+                  isVip2Unlocked ? (
+                    <button
+                      onClick={handleStartVip2Commander}
+                      className="w-full py-3.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-yellow-400 hover:from-emerald-300 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                    >
+                      <ShoppingCart className="w-4 h-4 text-slate-950" />
+                      <span>
+                        {vip2SavedStep === 'article3'
+                          ? 'Reprendre la commande VIP 2 (Étape 3/3 • 75 000 FCFA)'
+                          : vip2SavedStep === 'article2'
+                          ? 'Reprendre la commande VIP 2 (Étape 2/3 • 50 000 FCFA)'
+                          : 'Commander (Articles de mine VIP 2)'}
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setVipLevelModal(null);
+                        onOpenRecharge();
+                      }}
+                      className="w-full py-3.5 bg-slate-800 hover:bg-slate-750 text-amber-300 font-black text-xs rounded-xl border border-amber-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <Lock className="w-4 h-4 text-amber-400" />
+                      <span>Solde insuffisant pour commander (Dépôt min. 10 000F)</span>
+                    </button>
+                  )
                 )}
 
                 {vipLevelModal.isVip2 && isVip2Finished && (
@@ -1774,10 +1943,10 @@ NOTIFY pgrst, 'reload schema';`}
                     {vipLevelModal.isVip3
                       ? "Faire un Dépôt (Débloquer VIP 1 & 2)"
                       : vipLevelModal.isVip2
-                      ? (isVip2Unlocked ? "Recharger mon compte" : "Débloquer VIP 2 (Somme ≥ 10 000F)")
+                      ? (isVip2Unlocked ? "Recharger mon compte" : "Débloquer VIP 2 (Dépôt min 10 000F)")
                       : isVip1Unlocked
                       ? "Recharger mon compte"
-                      : "Débloquer VIP 1 (Dépôt min 2 300F)"}
+                      : "Débloquer VIP 1 (Dépôt min 3 500F)"}
                   </span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -1847,7 +2016,7 @@ NOTIFY pgrst, 'reload schema';`}
                 </div>
               )}
 
-              {/* 2. ARTICLE 1: 700 FCFA */}
+              {/* 2. ARTICLE 1: 1 700 FCFA */}
               {vip1CommanderStep === 'article1' && (
                 <div className="space-y-4 text-left">
                   <div className="text-center space-y-1">
@@ -1868,16 +2037,16 @@ NOTIFY pgrst, 'reload schema';`}
                         <span className="text-[10px] text-slate-400 font-mono block">Équipement d'Excavation</span>
                         <h4 className="text-sm font-extrabold text-white">Kit Détecteur de Pépites 24K</h4>
                         <div className="flex items-center gap-2 pt-0.5">
-                          <span className="text-xs text-slate-500 line-through font-mono">2 500 F</span>
+                          <span className="text-xs text-slate-500 line-through font-mono">4 500 F</span>
                           <span className="text-lg font-black font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                            700 FCFA
+                            1 700 FCFA
                           </span>
                         </div>
                       </div>
                     </div>
 
                     <p className="text-xs text-slate-300 leading-relaxed bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                      Achetez ce premier article de mine au prix réduit de <strong>700 FCFA</strong> pour lancer l'exploitation de votre filon aurifère VIP 1.
+                      Achetez ce premier article de mine au prix de <strong>1 700 FCFA</strong> pour lancer l'exploitation de votre filon aurifère VIP 1.
                     </p>
                   </div>
 
@@ -1886,12 +2055,12 @@ NOTIFY pgrst, 'reload schema';`}
                     className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-500 hover:from-emerald-400 hover:to-green-300 text-slate-950 font-black text-sm rounded-xl shadow-xl shadow-emerald-500/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                   >
                     <CheckCircle className="w-5 h-5 text-slate-950" />
-                    <span>Payer 700 FCFA</span>
+                    <span>Payer 1 700 FCFA</span>
                   </button>
                 </div>
               )}
 
-              {/* 3. ARTICLE 2: 800 FCFA */}
+              {/* 3. ARTICLE 2: 1 800 FCFA */}
               {vip1CommanderStep === 'article2' && (
                 <div className="space-y-4 text-left">
                   <div className="text-center space-y-1">
@@ -1912,16 +2081,16 @@ NOTIFY pgrst, 'reload schema';`}
                         <span className="text-[10px] text-slate-400 font-mono block">Dernier Équipement Requis</span>
                         <h4 className="text-sm font-extrabold text-white">Sonde Spectrométrique Lazer</h4>
                         <div className="flex items-center gap-2 pt-0.5">
-                          <span className="text-xs text-slate-500 line-through font-mono">3 800 F</span>
+                          <span className="text-xs text-slate-500 line-through font-mono">5 000 F</span>
                           <span className="text-lg font-black font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                            800 FCFA
+                            1 800 FCFA
                           </span>
                         </div>
                       </div>
                     </div>
 
                     <p className="text-xs text-slate-300 leading-relaxed bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                      Réglez ce second article à <strong>800 FCFA</strong> pour clôturer les commandes VIP 1 et recevoir immédiatement votre récompense exceptionnelle de <strong>17 000 FCFA</strong> !
+                      Réglez ce second article à <strong>1 800 FCFA</strong> pour clôturer les commandes VIP 1 (total 3 500 FCFA) et recevoir immédiatement votre récompense exceptionnelle de <strong>100 000 FCFA</strong> !
                     </p>
                   </div>
 
@@ -1930,7 +2099,7 @@ NOTIFY pgrst, 'reload schema';`}
                     className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-500 hover:from-emerald-400 hover:to-green-300 text-slate-950 font-black text-sm rounded-xl shadow-xl shadow-emerald-500/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                   >
                     <Crown className="w-5 h-5 text-slate-950" />
-                    <span>Payer 800 FCFA & Recevoir 17 000 FCFA</span>
+                    <span>Payer 1 800 FCFA & Recevoir 100 000 FCFA</span>
                   </button>
                 </div>
               )}
@@ -1947,10 +2116,10 @@ NOTIFY pgrst, 'reload schema';`}
                       ✓ VIP 1 Terminé avec Succès
                     </span>
                     <h3 className="text-2xl font-black text-white font-display">
-                      Récompense de 17 000 FCFA !
+                      Récompense de 100 000 FCFA !
                     </h3>
                     <p className="text-xs text-slate-300 leading-relaxed px-2">
-                      Félicitations ! Vous avez acquis vos 2 articles de mine (700 F + 800 F) et validé votre VIP 1. Une prime de <strong>17 000 FCFA</strong> a été ajoutée à votre solde !
+                      Félicitations ! Vous avez acquis vos 2 articles de mine (1 700 F + 1 800 F = 3 500 F) et validé votre VIP 1. Une prime de <strong>100 000 FCFA</strong> a été ajoutée à votre solde !
                     </p>
                   </div>
 
@@ -2035,7 +2204,7 @@ NOTIFY pgrst, 'reload schema';`}
                       Article de Mine VIP 2 • Étape 1/3
                     </span>
                     <h3 className="text-xl font-black text-white font-display">
-                      Concasseur Aurifère Lourd VIP 2
+                      Broyeur Hydraulique Quartz 24K VIP 2
                     </h3>
                   </div>
 
@@ -2091,7 +2260,7 @@ NOTIFY pgrst, 'reload schema';`}
                       Article de Mine VIP 2 • Étape 2/3
                     </span>
                     <h3 className="text-xl font-black text-white font-display">
-                      Refroidisseur Industriel VIP 2
+                      Refroidisseur de Creusets d'Or VIP 2
                     </h3>
                   </div>
 
@@ -2147,7 +2316,7 @@ NOTIFY pgrst, 'reload schema';`}
                       Article de Mine VIP 2 • Étape 3/3
                     </span>
                     <h3 className="text-xl font-black text-white font-display">
-                      Filtre de Lingots d'Or Massif
+                      Moule & Filtre Spectrométrique VIP 2
                     </h3>
                   </div>
 
@@ -2169,7 +2338,7 @@ NOTIFY pgrst, 'reload schema';`}
                     </div>
 
                     <p className="text-xs text-slate-300 leading-relaxed bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                      Réglez le 3e et dernier article à <strong>75 000 FCFA</strong> pour valider définitivement le VIP 2 et percevoir immédiatement votre prime spéciale de <strong>200 000 FCFA</strong> !
+                      Réglez le 3e et dernier article à <strong>75 000 FCFA</strong> pour valider définitivement le VIP 2 et percevoir immédiatement votre prime spéciale de <strong>500 000 FCFA</strong> !
                     </p>
                   </div>
 
@@ -2179,7 +2348,7 @@ NOTIFY pgrst, 'reload schema';`}
                       className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-500 hover:from-emerald-400 hover:to-green-300 text-slate-950 font-black text-sm rounded-xl shadow-xl shadow-emerald-500/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                     >
                       <Crown className="w-5 h-5 text-slate-950" />
-                      <span>Payer 75 000 FCFA sur Solde &amp; Recevoir 200 000 FCFA</span>
+                      <span>Payer 75 000 FCFA sur Solde &amp; Recevoir 500 000 FCFA</span>
                     </button>
 
                     <a
@@ -2207,10 +2376,10 @@ NOTIFY pgrst, 'reload schema';`}
                       ✓ VIP 2 Terminé avec Succès
                     </span>
                     <h3 className="text-2xl font-black text-white font-display">
-                      Récompense de 200 000 FCFA !
+                      Récompense de 500 000 FCFA !
                     </h3>
                     <p className="text-xs text-slate-300 leading-relaxed px-2">
-                      Félicitations ! Vous avez acquis vos 3 articles de mine VIP 2 (25 000 F + 50 000 F + 75 000 F) et validé votre VIP 2. Une prime de <strong>200 000 FCFA</strong> a été créditée sur votre solde !
+                      Félicitations ! Vous avez acquis vos 3 articles de mine VIP 2 (25 000 F + 50 000 F + 75 000 F) et validé votre VIP 2. Une prime de <strong>500 000 FCFA</strong> a été créditée sur votre solde !
                     </p>
                   </div>
 
