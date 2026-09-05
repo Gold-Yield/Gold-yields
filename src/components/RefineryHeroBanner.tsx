@@ -1,14 +1,15 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, ShieldCheck, Flame, ArrowUpRight, Award, Zap } from 'lucide-react';
+import { Sparkles, ShieldCheck, Flame, ArrowUpRight, Award, Zap, Play } from 'lucide-react';
 import heroRefineryImg from '../assets/images/gold_refinery_hero_1788513421267.jpg';
 
 interface RefineryHeroBannerProps {
   onOpenPlans?: () => void;
   onOpenTasks?: () => void;
+  onOpenVideoAd?: () => void;
 }
 
-export function RefineryHeroBanner({ onOpenPlans, onOpenTasks }: RefineryHeroBannerProps) {
+export function RefineryHeroBanner({ onOpenPlans, onOpenTasks, onOpenVideoAd }: RefineryHeroBannerProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -71,6 +72,19 @@ export function RefineryHeroBanner({ onOpenPlans, onOpenTasks }: RefineryHeroBan
             </div>
 
             <div className="flex items-center gap-2">
+              {onOpenVideoAd && (
+                <button
+                  type="button"
+                  onClick={onOpenVideoAd}
+                  className="px-3 py-1.5 sm:px-3.5 sm:py-2 bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 hover:brightness-110 text-white font-black text-xs rounded-xl shadow-lg shadow-red-600/30 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 group"
+                  title="Voir la publicité vidéo (gains & retraits)"
+                >
+                  <div className="w-3.5 h-3.5 rounded-full bg-white text-red-600 flex items-center justify-center">
+                    <Play className="w-2 h-2 fill-red-600 ml-0.5 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span>Pub Vidéo</span>
+                </button>
+              )}
               {onOpenTasks && (
                 <button
                   type="button"

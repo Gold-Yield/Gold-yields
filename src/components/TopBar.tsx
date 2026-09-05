@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Coins, LogOut, User, HelpCircle, Palette } from 'lucide-react';
+import { Coins, LogOut, User, HelpCircle, Palette, Play } from 'lucide-react';
 
 interface TopBarProps {
   userName: string;
@@ -13,6 +13,7 @@ interface TopBarProps {
   onLogout: () => void;
   onOpenTutorial?: () => void;
   onOpenThemeSelector?: () => void;
+  onOpenVideoAd?: () => void;
   currentTheme?: string;
 }
 
@@ -22,6 +23,7 @@ export function TopBar({
   onLogout,
   onOpenTutorial,
   onOpenThemeSelector,
+  onOpenVideoAd,
   currentTheme = 'royal'
 }: TopBarProps) {
   return (
@@ -53,6 +55,22 @@ export function TopBar({
 
         {/* User Card, Palette, Tutorial & Log Out */}
         <div className="flex items-center gap-2 sm:gap-2.5">
+          {onOpenVideoAd && (
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onOpenVideoAd}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-gradient-to-r from-red-600/20 via-amber-500/20 to-yellow-500/15 hover:from-red-600/30 hover:to-amber-500/30 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-amber-500/10 group"
+              title="Regarder le Spot Publicitaire (Preuves & Retraits)"
+            >
+              <div className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center">
+                <Play className="w-2.5 h-2.5 fill-slate-950 ml-0.5 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="font-mono uppercase tracking-wide text-[11px] hidden sm:inline">Pub Vidéo</span>
+              <span className="text-[9px] font-mono bg-red-600 text-white px-1 rounded font-black animate-pulse">HD</span>
+            </motion.button>
+          )}
+
           {onOpenThemeSelector && (
             <motion.button
               whileHover={{ scale: 1.03 }}

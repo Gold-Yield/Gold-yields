@@ -16,6 +16,7 @@ import { LiveNotification } from './components/LiveNotification';
 import { AssistantBubble } from './components/AssistantBubble';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { ThemeSelectorModal } from './components/ThemeSelectorModal';
+import { VideoAdModal } from './components/VideoAdModal';
 import { BottomNav, MobileTab } from './components/BottomNav';
 import { InvestmentPlan, ActiveInvestment, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
@@ -84,6 +85,7 @@ export default function App() {
     return 'royal';
   });
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [isVideoAdOpen, setIsVideoAdOpen] = useState(false);
 
   const handleSelectTheme = (newTheme: 'royal' | 'emerald' | 'obsidian' | 'light') => {
     setCurrentTheme(newTheme);
@@ -599,6 +601,7 @@ export default function App() {
           onLogout={handleLogout}
           onOpenTutorial={() => setIsTutorialOpen(true)}
           onOpenThemeSelector={() => setIsThemeModalOpen(true)}
+          onOpenVideoAd={() => setIsVideoAdOpen(true)}
           currentTheme={currentTheme}
         />
       )}
@@ -606,7 +609,10 @@ export default function App() {
       {/* Primary Screen router */}
       <main className="flex-1">
         {screen === 'auth' && (
-          <AuthScreen onLoginSuccess={handleLoginSuccess} />
+          <AuthScreen 
+            onLoginSuccess={handleLoginSuccess} 
+            onOpenVideoAd={() => setIsVideoAdOpen(true)}
+          />
         )}
 
         {screen === 'dashboard' && isLoggedIn && (
@@ -636,6 +642,7 @@ export default function App() {
             showToast={showToast}
             onOpenTutorial={() => setIsTutorialOpen(true)}
             onOpenThemeSelector={() => setIsThemeModalOpen(true)}
+            onOpenVideoAd={() => setIsVideoAdOpen(true)}
             currentTheme={currentTheme}
           />
         )}
@@ -707,6 +714,19 @@ export default function App() {
         onClose={() => setIsThemeModalOpen(false)}
         currentTheme={currentTheme}
         onSelectTheme={handleSelectTheme}
+      />
+
+      {/* Interactive Official Video Ad Modal (Big Earnings & Withdrawals) */}
+      <VideoAdModal
+        isOpen={isVideoAdOpen}
+        onClose={() => setIsVideoAdOpen(false)}
+        onOpenRegister={() => {
+          if (!isLoggedIn) {
+            setScreen('auth');
+          } else {
+            setDashboardTab('plans');
+          }
+        }}
       />
 
       {/* Custom Premium Toast Notification */}

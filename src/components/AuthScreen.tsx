@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Coins, Shield, Sparkles, User, Lock, Phone, Gift } from 'lucide-react';
+import { Coins, Shield, Sparkles, User, Lock, Phone, Gift, Play } from 'lucide-react';
 import imgRefinery from '../assets/images/gold_refinery_1783873491748.jpg';
 
 const COUNTRIES = [
@@ -28,9 +28,10 @@ const COUNTRIES = [
 
 interface AuthScreenProps {
   onLoginSuccess: (user: any, activeInvestments: any[], transactions: any[], isStale?: boolean, isNewUser?: boolean) => void;
+  onOpenVideoAd?: () => void;
 }
 
-export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
+export function AuthScreen({ onLoginSuccess, onOpenVideoAd }: AuthScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [phone, setPhone] = useState('');
   const [countryDial, setCountryDial] = useState('+225');
@@ -147,6 +148,20 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           <span className="absolute bottom-3 left-4 text-[9px] bg-gold-500 text-slate-950 font-extrabold px-2.5 py-1 rounded-lg font-mono flex items-center gap-1 shadow-md">
             <Shield className="w-3 h-3" /> RAFFINERIE PARTENAIRE CERTIFIÉE
           </span>
+
+          {onOpenVideoAd && (
+            <button
+              type="button"
+              onClick={onOpenVideoAd}
+              className="absolute bottom-2.5 right-4 bg-slate-950/90 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 text-[10px] font-black px-2.5 py-1 rounded-xl shadow-lg flex items-center gap-1.5 transition-all cursor-pointer group"
+            >
+              <div className="w-3.5 h-3.5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center">
+                <Play className="w-2 h-2 fill-slate-950 ml-0.5" />
+              </div>
+              <span>Pub Vidéo</span>
+              <span className="text-[8px] font-mono bg-red-600 text-white px-1 rounded font-black animate-pulse">HD</span>
+            </button>
+          )}
         </div>
 
         {/* App Logo & Header */}

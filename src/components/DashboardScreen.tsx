@@ -86,6 +86,7 @@ interface DashboardScreenProps {
   showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
   onOpenTutorial?: () => void;
   onOpenThemeSelector?: () => void;
+  onOpenVideoAd?: () => void;
   currentTheme?: string;
 }
 
@@ -156,6 +157,7 @@ export function DashboardScreen({
   showToast,
   onOpenTutorial,
   onOpenThemeSelector,
+  onOpenVideoAd,
   currentTheme = 'royal'
 }: DashboardScreenProps) {
   const [copied, setCopied] = useState(false);
@@ -897,6 +899,7 @@ NOTIFY pgrst, 'reload schema';`}
           <RefineryHeroBanner
             onOpenPlans={() => onTabChange && onTabChange('plans')}
             onOpenTasks={() => onTabChange && onTabChange('tasks')}
+            onOpenVideoAd={onOpenVideoAd}
           />
 
           {/* HERO BLOCK & CORE METRICS CARD */}
@@ -1024,6 +1027,50 @@ NOTIFY pgrst, 'reload schema';`}
               </div>
             </a>
           </div>
+
+          {/* VIDEO PROMO SHOWCASE BANNER */}
+          {onOpenVideoAd && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-950/70 via-slate-900 to-amber-950/60 border border-amber-500/35 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer hover:border-amber-400/60 transition-all group"
+              onClick={onOpenVideoAd}
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
+                  <Play className="w-5 h-5 fill-white ml-0.5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-mono font-black uppercase bg-red-600 text-white px-2 py-0.5 rounded-full animate-pulse">
+                      Spot Publicitaire HD
+                    </span>
+                    <span className="text-[10px] text-amber-300 font-mono font-bold">
+                      Preuves & Retraits
+                    </span>
+                  </div>
+                  <h4 className="text-sm sm:text-base font-black text-white font-display mt-0.5">
+                    Gros Gains & Retraits Instantanés Mobile Money
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-slate-300">
+                    Découvrez comment les investisseurs perçoivent jusqu'à 500 000 FCFA avec retraits Wave & Orange Money.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenVideoAd();
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95 transition-transform"
+              >
+                <Play className="w-3.5 h-3.5 fill-slate-950 ml-0.5" />
+                <span>Voir le Spot (30s)</span>
+              </button>
+            </motion.div>
+          )}
 
           {/* VIP MEMBER LEVELS TICKET GALLERY */}
           {renderVipLevelTickets()}

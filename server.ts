@@ -8,12 +8,26 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { GoogleGenAI } from '@google/genai';
 
 // Load environmental variables
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+// Lazy-initialized Gemini AI client
+let geminiClient: GoogleGenAI | null = null;
+function getGemini(): GoogleGenAI | null {
+  if (!process.env.GEMINI_API_KEY) return null;
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+    });
+  }
+  return geminiClient;
+}
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
@@ -723,6 +737,52 @@ app.post('/api/user/withdraw', async (req, res) => {
       console.error('[Supabase Withdraw Error]:', errorDetails);
     }
     res.status(500).json({ error: error?.message || errorDetails });
+  }
+});
+
+// 7.5 AI Voice Synthesis (TTS) for Video Narration
+app.post('/api/tts', async (req, res) => {
+  const { text, voice } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: 'Texte requis pour la synthèse vocale.' });
+  }
+
+  try {
+    const ai = getGemini();
+    if (!ai) {
+      return res.json({ success: false, fallback: true, message: 'Gemini non initialisé.' });
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-flash-tts-preview',
+      contents: text,
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: voice || 'Zephyr'
+            }
+          }
+        }
+      }
+    });
+
+    const parts = response.candidates?.[0]?.content?.parts || [];
+    for (const part of parts) {
+      if (part.inlineData && part.inlineData.data) {
+        return res.json({
+          success: true,
+          audioBase64: part.inlineData.data,
+          mimeType: part.inlineData.mimeType || 'audio/mp3'
+        });
+      }
+    }
+
+    res.json({ success: false, fallback: true });
+  } catch (err: any) {
+    console.warn('[Gemini TTS API Warn]:', err?.message || err);
+    res.json({ success: false, fallback: true, error: err?.message });
   }
 });
 
